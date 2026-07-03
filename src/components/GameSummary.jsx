@@ -9,7 +9,7 @@
       : game.awayTeam;
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-4 flex items-center">
+    <main className="min-h-screen bg-green-950 text-white p-4 flex items-center">
       <Card className="mx-auto w-full max-w-md rounded-3xl bg-white/10 border-white/10 text-white">
         <CardContent className="p-6 space-y-6">
           <div>

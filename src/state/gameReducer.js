@@ -15,9 +15,10 @@ export function gameReducer(state, action) {
       const awayTeam = action.awayTeam || state.awayTeam;
       return {
         ...state,
-        status: "scoring",
-        homeTeam,
-        awayTeam,
+  id: action.gameId,
+  status: "scoring",
+  homeTeam,
+  awayTeam,
         score: {
           [homeTeam]: 0,
           [awayTeam]: 0,

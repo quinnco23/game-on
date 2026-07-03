@@ -1,9 +1,30 @@
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
+import { saveEvent } from "../services/eventsService"
+
 
 export function CountControls({ game, dispatch }) {
   const walkLikely = game.balls === 3;
   const strikeoutLikely = game.strikes === 2;
+
+  async function handlePlay(eventType, label, action) {
+  dispatch(action)
+
+  try {
+    const saved = await saveEvent({
+      game_id: game.id,
+      inning: game.inning,
+      half: game.half,
+      event_type: eventType,
+      label,
+    })
+
+    console.log("Saved event:", saved)
+  } catch (error) {
+    console.error("Could not save event:", error)
+    alert(error.message)
+  }
+}
 
   return (
     <Card className="rounded-3xl bg-white/10 border-white/10 text-white">
@@ -14,18 +35,17 @@ export function CountControls({ game, dispatch }) {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button className="rounded-2xl py-7 text-lg" onClick={() => dispatch({ type: "BALL" })}>
-            ⚾ Ball{walkLikely ? "?" : ""}
-          </Button>
-          <Button className="rounded-2xl py-7 text-lg" onClick={() => dispatch({ type: "STRIKE" })}>
-            ❌ Strike{strikeoutLikely ? "?" : ""}
-          </Button>
-          <Button className="rounded-2xl py-7 text-lg" variant="secondary" onClick={() => dispatch({ type: "FOUL" })}>
-            Foul
-          </Button>
-          <Button className="rounded-2xl py-7 text-lg" variant="secondary" onClick={() => dispatch({ type: "OUT" })}>
-            🧤 Out
-          </Button>
+          <Button onClick={() => handlePlay("ball", "Ball", { type: "BALL" })}>
+  Ball
+</Button>
+
+<Button onClick={() => handlePlay("strike", "Strike", { type: "STRIKE" })}>
+  Strike
+</Button>
+
+<Button onClick={() => handlePlay("foul", "Foul Ball", { type: "FOUL" })}>
+  Foul
+</Button>
         </div>
       </CardContent>
     </Card>

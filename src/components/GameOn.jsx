@@ -66,10 +66,11 @@ export default function TapScorePrototype() {
         <BaseDiamond bases={game.bases} />
         <CountControls game={game} dispatch={dispatch} />
         <PlayControls
-          dispatch={dispatch}
-          onVoice={() => setShowVoiceConfirm(true)}
-          onFakeAudioAssist={() => setShowAudioPrompt(true)}
-        />
+  game={game}
+  dispatch={dispatch}
+  onVoice={() => setShowVoiceConfirm(true)}
+  onFakeAudioAssist={() => setShowAudioPrompt(true)}
+/>
         <EventFeed events={game.events} />
 
         <Button className="w-full rounded-2xl" variant="secondary" onClick={() => dispatch({ type: "END_GAME" })}>
