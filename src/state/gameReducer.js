@@ -34,6 +34,8 @@ export function gameReducer(state, action) {
       };
     }
 
+    case "LOAD_GAME":
+      return action.game;
     case "BALL": {
       const nextBalls = state.balls + 1;
       if (nextBalls >= 4) {
@@ -79,6 +81,8 @@ export function gameReducer(state, action) {
 
     case "END_GAME":
       return { ...state, status: "summary" };
+
+    
 
     default:
       return state;

@@ -54,16 +54,22 @@ export function advanceBattingOrder(state) {
   }
 }
 
-export function logEvent(state, label) {
+export function logEvent(state, event) {
+  const eventObject =
+    typeof event === "string"
+      ? { label: event, event_type: "note" }
+      : event
+
   return {
     ...state,
     events: [
       ...state.events,
       {
         id: crypto.randomUUID(),
-        label,
-        inning: `${state.half === "top" ? "Top" : "Bottom"} ${state.inning}`,
+        inning: state.inning,
+        half: state.half,
         timestamp: new Date().toLocaleTimeString(),
+        ...eventObject,
       },
     ],
   }
@@ -92,7 +98,11 @@ export function applyWalk(state) {
     bases,
   })
 
-  return logEvent(next, `Walk - ${formatPlayer(batter)}`)
+  return logEvent(next, {
+    event_type: "walk",
+    label: `Walk - ${formatPlayer(batter)}`,
+    player_id: batter.id,
+  })
 }
 
 export function applyHit(state, label, basesEarned) {
@@ -137,7 +147,11 @@ export function applyHit(state, label, basesEarned) {
     bases: nextBases,
   })
 
-  return logEvent(next, `${label} - ${formatPlayer(batter)}`)
+  return logEvent(next, {
+    event_type: label.toLowerCase().replace(" ", "_"),
+    label: `${label} - ${formatPlayer(batter)}`,
+    player_id: batter.id,
+  })
 }
 
 export function applyHomeRun(state) {
@@ -160,10 +174,12 @@ export function applyHomeRun(state) {
     },
   })
 
-  return logEvent(
-    next,
-    `Home Run - ${formatPlayer(batter)} (${runs} run${runs > 1 ? "s" : ""})`
-  )
+  return logEvent(next, {
+    event_type: "home_run",
+    label: `Home Run - ${formatPlayer(batter)} (${runs} run${runs > 1 ? "s" : ""})`,
+    player_id: batter.id,
+    rbi: runs,
+  })
 }
 
 export function applyOut(state, label) {
@@ -187,9 +203,15 @@ export function applyOut(state, label) {
       ...resetCount(state),
       outs: nextOuts,
     }),
-    `${label} - ${formatPlayer(batter)}`
+    {
+      event_type: label === "Strikeout" ? "strikeout" : "out",
+      label: `${label} - ${formatPlayer(batter)}`,
+      player_id: batter.id,
+      outs_recorded: 1,
+    }
   )
 }
+
 
 export function advanceRunner(state, from, to) {
   const runner = state.bases[from]

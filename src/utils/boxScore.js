@@ -1,29 +1,34 @@
-function buildBoxScore(events, lineup) {
+export function buildBoxScore(events = [], lineup = []) {
   return lineup.map((player) => {
     const playerEvents = events.filter(
-      (event) => event.player_id === player.player_id
+      (event) => event.player_id === player.id || event.playerId === player.id
     )
 
+    const hits = playerEvents.filter((event) =>
+      ["single", "double", "triple", "home_run"].includes(event.event_type || event.type)
+    ).length
+
+    const atBats = playerEvents.filter((event) =>
+      ["single", "double", "triple", "home_run", "out", "strikeout"].includes(
+        event.event_type || event.type
+      )
+    ).length
+
+    const walks = playerEvents.filter(
+      (event) => (event.event_type || event.type) === "walk"
+    ).length
+
     return {
-      playerName: player.name,
+      id: player.id,
       number: player.number,
+      name: player.name,
       position: player.position,
-
-      AB: playerEvents.filter((e) =>
-        ["single", "double", "triple", "home_run", "out", "strikeout"].includes(e.event_type)
-      ).length,
-
-      H: playerEvents.filter((e) =>
-        ["single", "double", "triple", "home_run"].includes(e.event_type)
-      ).length,
-
-      BB: playerEvents.filter((e) => e.event_type === "walk").length,
-
-      R: events.filter(
-        (e) => e.event_type === "run_scored" && e.player_id === player.player_id
-      ).length,
-
-      RBI: playerEvents.reduce((sum, e) => sum + (e.rbi || 0), 0),
+      AB: atBats,
+      H: hits,
+      BB: walks,
+      RBI: playerEvents.reduce((sum, event) => sum + (event.rbi || 0), 0),
+      R: playerEvents.filter((event) => event.scored === true).length,
+      AVG: atBats > 0 ? (hits / atBats).toFixed(3) : ".000",
     }
   })
 }
