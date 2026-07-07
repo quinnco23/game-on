@@ -4,7 +4,7 @@
 import React, { useMemo, useReducer, useState } from "react";
 import { Mic, Undo2, Video, Zap, Users, Trophy } from "lucide-react";
 import { LineupEditor } from "./LineupEditor";
-import {Card, CardContent} from "./ui/Card"
+import {Card, CardContent} from "./ui/card"
 import { Button } from "./ui/button";
 import { createGame } from "../services/gamesService"
 import { supabase } from "../lib/supabase"
