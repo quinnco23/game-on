@@ -1,4 +1,4 @@
-# Game On Baseball Score keeping applicatij 
+# GameOn Baseball Score Keep applicatiion
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
