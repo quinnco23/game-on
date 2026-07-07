@@ -1,36 +1,56 @@
- import { Card, CardContent} from "./ui/card";
- import { Button } from "./ui/button";
- 
- export function GameSummary({ game, onRestart }) {
-  const winner = game.score[game.homeTeam] === game.score[game.awayTeam]
-    ? "Tie game"
-    : game.score[game.homeTeam] > game.score[game.awayTeam]
-      ? game.homeTeam
-      : game.awayTeam;
+import { Button } from "./ui/button"
+import { Card, CardContent } from "./ui/card"
+import { BoxScore } from "./BoxScore"
+
+export function GameSummary({ game, onBackHome }) {
+  const awayScore = game.score?.[game.awayTeam] ?? 0
+  const homeScore = game.score?.[game.homeTeam] ?? 0
 
   return (
-    <main className="min-h-screen bg-green-950 text-white p-4 flex items-center">
-      <Card className="mx-auto w-full max-w-md rounded-3xl bg-white/10 border-white/10 text-white">
-        <CardContent className="p-6 space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold">Final Score</h1>
-            <p className="text-white/60">Auto-generated recap draft</p>
-          </div>
+    <main className="min-h-screen bg-green-950 text-white p-4">
+      <div className="mx-auto max-w-md space-y-4">
+        <Card className="rounded-3xl bg-white/10 border-white/10 text-white">
+          <CardContent className="p-5 space-y-4">
+            <div className="text-xs tracking-[0.3em] text-green-300 uppercase">
+              Final
+            </div>
 
-          <div className="space-y-2 text-3xl font-bold">
-            <div className="flex justify-between"><span>{game.awayTeam}</span><span>{game.score[game.awayTeam]}</span></div>
-            <div className="flex justify-between"><span>{game.homeTeam}</span><span>{game.score[game.homeTeam]}</span></div>
-          </div>
+            <h1 className="text-3xl font-black">Game Summary</h1>
 
-          <div className="rounded-2xl bg-white/5 p-4 text-sm text-white/80">
-            {winner === "Tie game"
-              ? "The game ended tied after a steady back-and-forth matchup."
-              : `${winner} came out ahead in a game with ${game.events.length} tracked scoring events and plays.`}
-          </div>
+            <div className="rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
+              <div className="grid grid-cols-[1fr_64px]">
+                <div className="p-3 border-b border-white/10 font-bold">
+                  {game.awayTeam}
+                </div>
+                <div className="p-3 border-b border-white/10 text-center text-2xl font-black">
+                  {awayScore}
+                </div>
 
-          <Button className="w-full rounded-2xl" onClick={onRestart}>Start Another Game</Button>
-        </CardContent>
-      </Card>
+                <div className="p-3 font-bold">{game.homeTeam}</div>
+                <div className="p-3 text-center text-2xl font-black">
+                  {homeScore}
+                </div>
+              </div>
+            </div>
+
+            <Button className="w-full rounded-2xl" onClick={onBackHome}>
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+
+        <BoxScore
+          title={game.awayTeam}
+          events={game.events}
+          lineup={game.lineups[game.awayTeam]}
+        />
+
+        <BoxScore
+          title={game.homeTeam}
+          events={game.events}
+          lineup={game.lineups[game.homeTeam]}
+        />
+      </div>
     </main>
-  );
+  )
 }
