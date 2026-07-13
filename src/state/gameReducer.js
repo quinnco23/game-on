@@ -6,6 +6,7 @@ import {
   advanceRunner,
   logEvent,
 } from "./gameLogic"
+import { applyResolvedHit } from "./gameLogic"
 
 
 export function gameReducer(state, action) {
@@ -56,6 +57,10 @@ export function gameReducer(state, action) {
       const nextStrikes = Math.min(2, state.strikes + 1);
       return logEvent({ ...state, strikes: nextStrikes }, "Foul ball");
     }
+
+
+    case "RESOLVE_HIT":
+      return applyResolvedHit(state, action.resolution);
 
     case "OUT":
       return applyOut(state, action.label || "Out");

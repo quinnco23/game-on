@@ -66,7 +66,7 @@ export function HomeScreen({
     <main className="min-h-screen bg-green-950 text-white p-4">
       <div className="mx-auto max-w-md space-y-4">
         <header className="rounded-3xl bg-black/40 border border-white/10 p-5 text-center">
-          <div className="text-sm tracking-[0.3em] text-green-300 uppercase">
+          <div className="text-sm tracking-[0.3em] text-green-300 ">
             GameOn
           </div>
           <h1 className="text-4xl font-black mt-2">Scoreboard</h1>
@@ -99,7 +99,7 @@ export function HomeScreen({
         </Button>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-bold">Finished Games</h2>
+          <h2 className="text-xl font-bold">Around the League</h2>
 
           {finishedGames.length === 0 ? (
             <Card className="rounded-3xl bg-white/10 border-white/10 text-white">

@@ -239,3 +239,75 @@ export function advanceRunner(state, from, to) {
     `${formatPlayer(runner)} advanced to ${to}`
   )
 }
+
+export function applyResolvedHit(state, resolution) {
+  const battingTeam = getBattingTeam(state)
+  const batter = getCurrentBatter(state)
+
+  let nextState = resetCount(state)
+
+  const nextBases = {
+    first: null,
+    second: null,
+    third: null,
+  }
+
+  function placeRunner(runner, destination) {
+    if (!runner) return
+
+    if (destination === "home") {
+      nextState = scoreRun(nextState, battingTeam, 1)
+    }
+
+    if (destination === "first") nextBases.first = runner
+    if (destination === "second") nextBases.second = runner
+    if (destination === "third") nextBases.third = runner
+  }
+
+  // existing runners
+  resolution.runnerAdvances.forEach((advance) => {
+    if (advance.to === "stay") {
+      placeRunner(advance.runner, advance.from)
+    } else if (advance.to !== "out") {
+      placeRunner(advance.runner, advance.to)
+    }
+  })
+
+  // batter
+  if (resolution.batterDestination !== "out") {
+    placeRunner(batter, resolution.batterDestination)
+  }
+
+  const next = advanceBattingOrder({
+    ...nextState,
+    bases: nextBases,
+  })
+
+  return logEvent(next, {
+    event_type: resolution.playType,
+    label: `${resolution.playType} - ${formatPlayer(batter)}`,
+    player_id: batter.id,
+    runs: resolution.runs,
+    rbi: resolution.rbi,
+    details: resolution.details,
+  })
+}
+
+export function applyReachedOnError(state, action) {
+  const batter = getCurrentBatter(state)
+
+  const next = advanceBattingOrder({
+    ...resetCount(state),
+    bases: {
+      ...state.bases,
+      first: batter,
+    },
+  })
+
+  return logEvent(next, {
+    event_type: "error",
+    label: action.label || `Reached on Error - ${formatPlayer(batter)}`,
+    player_id: batter.id,
+    details: action.details,
+  })
+}

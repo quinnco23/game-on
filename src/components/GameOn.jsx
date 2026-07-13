@@ -18,9 +18,16 @@ import { EventFeed } from "./EventFeed"
 import { Button } from "./ui/button"
 import { GameSummary } from "./GameSummary"
 import { BoxScore } from "./BoxScore"
+import { PlayResolutionDialog } from "./PlayResolutionDialog"
+import { getCurrentBatter } from "../state/gameLogic"
+import { handleGameAction } from "../services/gameActions"
+import { OutResultDialog } from "./OutResultDialog"
+
+
 
 export default function TapScorePrototype() {
   const [game, dispatch] = useReducer(gameReducer, initialGame)
+  const [pendingHitType, setPendingHitType] = useState(null)
 
   const [screen, setScreen] = useState("home")
   const [activeGame, setActiveGame] = useState(null)
@@ -29,6 +36,7 @@ export default function TapScorePrototype() {
   const [loading, setLoading] = useState(true)
   const [showVoiceConfirm, setShowVoiceConfirm] = useState(false)
   const [showAudioPrompt, setShowAudioPrompt] = useState(false)
+  const [showOutResultDialog, setShowOutResultDialog] = useState(false)
 
   useEffect(() => {
     async function loadHomeData() {
@@ -119,11 +127,70 @@ export default function TapScorePrototype() {
         <CountControls game={game} dispatch={dispatch} />
 
         <PlayControls
-          game={game}
-          dispatch={dispatch}
-          onVoice={() => setShowVoiceConfirm(true)}
-          onFakeAudioAssist={() => setShowAudioPrompt(true)}
-        />
+  game={game}
+  dispatch={dispatch}
+  onVoice={() => setShowVoiceConfirm(true)}
+  onFakeAudioAssist={() => setShowAudioPrompt(true)}
+  onOpenOutDialog={() => setShowOutResultDialog(true)}
+  onOpenPlayResolution={(playType) => setPendingHitType(playType)}
+/>
+
+{pendingHitType && (
+  <PlayResolutionDialog
+    playType={pendingHitType}
+    batter={getCurrentBatter(game)}
+    bases={game.bases}
+    onCancel={() => setPendingHitType(null)}
+    onConfirm={async (resolution) => {
+      await handleGameAction({
+        game,
+        dispatch,
+        action: {
+          type: "RESOLVE_HIT",
+          resolution,
+        },
+        eventType: resolution.playType,
+        label: `${resolution.playType} - ${getCurrentBatter(game).name}`,
+        extraEventData: {
+          runs: resolution.runs,
+          rbi: resolution.rbi,
+          details: resolution.details,
+        },
+      })
+
+      setPendingHitType(null)
+    }}
+  />
+)}
+
+{showOutResultDialog && (
+  <OutResultDialog
+    onCancel={() => setShowOutResultDialog(false)}
+    onConfirm={async ({ eventType, label, action, details, outsRecorded }) => {
+      try {
+        await handleGameAction({
+          game,
+          dispatch,
+          action: {
+            ...action,
+            details,
+          },
+          eventType,
+          label,
+          extraEventData: {
+            outs_recorded: outsRecorded,
+            details,
+          },
+        })
+
+        setShowOutResultDialog(false)
+      } catch (error) {
+        console.error("Could not save result:", error)
+        alert(error.message || "Could not save result")
+      }
+    }}
+  />
+)}
 
         <EventFeed events={game.events} />
 

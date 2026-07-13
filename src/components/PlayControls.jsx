@@ -8,80 +8,51 @@ export function PlayControls({
   dispatch,
   onVoice,
   onFakeAudioAssist,
+  onOpenPlayResolution,
+  onOpenOutDialog,
 }) {
-  async function handlePlay(eventType, label, actionType) {
-    try {
-      await handleGameAction({
-        game,
-        dispatch,
-        action: { type: actionType },
-        eventType,
-        label,
-      })
-    } catch (error) {
-      console.error("Play button failed:", error)
-      alert(error.message || "Could not save play")
-    }
-  }
-
   return (
     <Card className="rounded-3xl bg-white/10 border-white/10 text-white">
       <CardContent className="p-5 space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <Button
             className="rounded-2xl py-6"
-            onClick={() => handlePlay("single", "Single", "SINGLE")}
+            onClick={() => onOpenPlayResolution("single")}
           >
             Single
           </Button>
 
           <Button
             className="rounded-2xl py-6"
-            onClick={() => handlePlay("double", "Double", "DOUBLE")}
+            onClick={() => onOpenPlayResolution("double")}
           >
             Double
           </Button>
 
           <Button
             className="rounded-2xl py-6"
-            onClick={() => handlePlay("triple", "Triple", "TRIPLE")}
+            onClick={() => onOpenPlayResolution("triple")}
           >
             Triple
           </Button>
 
           <Button
             className="rounded-2xl py-6"
-            onClick={() => handlePlay("home_run", "Home Run", "HOME_RUN")}
+            onClick={() => onOpenPlayResolution("home_run")}
           >
             HR
           </Button>
+
+          <Button
+  className="rounded-2xl py-6"
+  onClick={onOpenOutDialog}
+>
+  Out / Error
+</Button>
+
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <Button
-            className="rounded-2xl"
-            variant="secondary"
-            onClick={onVoice}
-          >
-            <Mic className="mr-2 h-4 w-4" /> Voice
-          </Button>
-
-          <Button
-            className="rounded-2xl"
-            variant="secondary"
-            onClick={onFakeAudioAssist}
-          >
-            <Zap className="mr-2 h-4 w-4" /> Assist
-          </Button>
-
-          <Button
-            className="rounded-2xl"
-            variant="secondary"
-            onClick={() => handlePlay("undo", "Undo", "UNDO")}
-          >
-            <Undo2 className="mr-2 h-4 w-4" /> Undo
-          </Button>
-        </div>
+        {/* keep your Voice / Assist / Undo buttons below */}
       </CardContent>
     </Card>
   )
