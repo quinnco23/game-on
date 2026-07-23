@@ -31,81 +31,116 @@ export default function GameSetupScreen({ game, onStart }) {
   
 
   return (
-    <main className="min-h-screen bg-green-950 text-white p-4">
-      <Card className="mx-auto w-full max-w-md rounded-3xl bg-white/10 border-white/10 text-white">
-        <CardContent className="p-6 space-y-6">
-          <div>
-            <div className="flex items-center gap-2 text-2xl font-bold">
-              <Trophy className="h-7 w-7" /> GameOn
-            </div>
-            <p className="text-sm text-white/70 mt-2">With UmpAI </p>
-          </div>
+    <main className="scoreboard-shell p-4 md:p-6">
+  <Card className="scoreboard-panel mx-auto w-full max-w-md rounded-none text-scoreboard-cream">
+    <CardContent className="relative z-10 space-y-6 p-6">
+      <header className="border-b-2 border-scoreboard-red pb-4">
+        <div className="flex items-center gap-3">
+          <Trophy className="h-7 w-7 text-scoreboard-amber" />
 
-          <label className="block space-y-2">
-            <span className="text-sm text-white/70">Away Team</span>
-            <input className="w-full rounded-2xl p-3 text-white" value={awayTeam} onChange={(e) => setAwayTeam(e.target.value)} />
-          </label>
+          <h1 className="scoreboard-title text-2xl">
+            GameOn
+          </h1>
+        </div>
 
-          <LineupEditor title={`${awayTeam} Lineup`} lineup={awayLineup} setLineup={setAwayLineup} />
+        <p className="scoreboard-label mt-2">
+          With UmpAI
+        </p>
+      </header>
 
-          <label className="block space-y-2">
-            <span className="text-sm text-white/70">Home Team</span>
-            <input className="w-full rounded-2xl p-3 text-slate-900" value={homeTeam} onChange={(e) => setHomeTeam(e.target.value)} />
-          </label>
+      <label className="block space-y-2">
+        <span className="scoreboard-label">
+          Away Team
+        </span>
 
-          <LineupEditor title={`${homeTeam} Lineup`} lineup={homeLineup} setLineup={setHomeLineup} />
+        <input
+          className="scoreboard-input"
+          value={awayTeam}
+          onChange={(e) => setAwayTeam(e.target.value)}
+          placeholder="Enter away team"
+        />
+      </label>
 
-          <Button
-  className="w-full rounded-2xl text-lg py-6"
-onClick={async () => {
-  try {
-    const savedHomeTeam = await findOrCreateTeam(homeTeam)
-    const savedAwayTeam = await findOrCreateTeam(awayTeam)
+      <section className="border-t border-scoreboard-cream/30 pt-5">
+        <LineupEditor
+          title={`${awayTeam} Lineup`}
+          lineup={awayLineup}
+          setLineup={setAwayLineup}
+        />
+      </section>
 
-    const savedGame = await createGame({
-      homeTeamId: savedHomeTeam.id,
-      awayTeamId: savedAwayTeam.id,
-    })
+      <label className="block space-y-2">
+        <span className="scoreboard-label">
+          Home Team
+        </span>
 
-    const savedHomeLineup = await saveLineup({
-      gameId: savedGame.id,
-      teamId: savedHomeTeam.id,
-      lineup: homeLineup,
-    })
+        <input
+          className="scoreboard-input"
+          value={homeTeam}
+          onChange={(e) => setHomeTeam(e.target.value)}
+          placeholder="Enter home team"
+        />
+      </label>
 
-    const savedAwayLineup = await saveLineup({
-      gameId: savedGame.id,
-      teamId: savedAwayTeam.id,
-      lineup: awayLineup,
-    })
+      <section className="border-t border-scoreboard-cream/30 pt-5">
+        <LineupEditor
+          title={`${homeTeam} Lineup`}
+          lineup={homeLineup}
+          setLineup={setHomeLineup}
+        />
+      </section>
 
-    onStart({
-      gameId: savedGame.id,
-      homeTeam: savedHomeTeam.name,
-      awayTeam: savedAwayTeam.name,
-      homeLineup: savedHomeLineup,
-      awayLineup: savedAwayLineup,
-    })
-  } catch (error) {
-    console.error("Could not start game:", error)
-    alert(error.message)
-  }
-}}
->
-  Start Game
-</Button>
+      <div className="space-y-3 border-t-2 border-scoreboard-red pt-5">
+        <Button
+          className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
+          onClick={async () => {
+            try {
+              const savedHomeTeam = await findOrCreateTeam(homeTeam)
+              const savedAwayTeam = await findOrCreateTeam(awayTeam)
 
+              const savedGame = await createGame({
+                homeTeamId: savedHomeTeam.id,
+                awayTeamId: savedAwayTeam.id,
+              })
 
+              const savedHomeLineup = await saveLineup({
+                gameId: savedGame.id,
+                teamId: savedHomeTeam.id,
+                lineup: homeLineup,
+              })
 
-          <Button
-  variant="secondary"
-  className="w-full"
-  onClick={testConnection}
->
-  Test Supabase
-</Button>
-        </CardContent>
-      </Card>
-    </main>
+              const savedAwayLineup = await saveLineup({
+                gameId: savedGame.id,
+                teamId: savedAwayTeam.id,
+                lineup: awayLineup,
+              })
+
+              onStart({
+                gameId: savedGame.id,
+                homeTeam: savedHomeTeam.name,
+                awayTeam: savedAwayTeam.name,
+                homeLineup: savedHomeLineup,
+                awayLineup: savedAwayLineup,
+              })
+            } catch (error) {
+              console.error("Could not start game:", error)
+              alert(error.message)
+            }
+          }}
+        >
+          Start Game
+        </Button>
+
+        <Button
+          variant="outline"
+          className="scoreboard-button w-full rounded-none"
+          onClick={testConnection}
+        >
+          Test Supabase
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+</main>
   );
 }

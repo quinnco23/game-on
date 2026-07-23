@@ -22,10 +22,56 @@ import { PlayResolutionDialog } from "./PlayResolutionDialog"
 import { getCurrentBatter } from "../state/gameLogic"
 import { handleGameAction } from "../services/gameActions"
 import { OutResultDialog } from "./OutResultDialog"
+import { BaseRunnersField } from "./BaseRunnersField"
+import { resolveRunnerMovement } from "@/scoring/runnerEngine"
 
+
+
+function FieldBase({
+  runner,
+  label,
+  className = "",
+}) {
+  const occupied = Boolean(runner)
+
+  return (
+    <div className={className}>
+      <div
+        className={[
+          "ballpark-base",
+          occupied
+            ? "ballpark-base-occupied"
+            : "ballpark-base-empty",
+        ].join(" ")}
+        title={
+          occupied
+            ? `${runner.name || "Runner"} on ${label}`
+            : `${label} empty`
+        }
+      >
+        <span className="ballpark-base-label">
+          {label}
+        </span>
+      </div>
+
+      {occupied && (
+        <div
+          className="
+            absolute left-1/2 top-10 w-24 -translate-x-1/2
+            truncate text-center font-heading text-[9px]
+            font-bold uppercase tracking-wide text-scoreboard-cream
+          "
+        >
+          {runner.name}
+        </div>
+      )}
+    </div>
+  )
+}
 
 
 export default function TapScorePrototype() {
+
   const [game, dispatch] = useReducer(gameReducer, initialGame)
   const [pendingHitType, setPendingHitType] = useState(null)
 
@@ -33,26 +79,53 @@ export default function TapScorePrototype() {
   const [activeGame, setActiveGame] = useState(null)
   const [finishedGames, setFinishedGames] = useState([])
 
+  
+
   const [loading, setLoading] = useState(true)
   const [showVoiceConfirm, setShowVoiceConfirm] = useState(false)
   const [showAudioPrompt, setShowAudioPrompt] = useState(false)
   const [showOutResultDialog, setShowOutResultDialog] = useState(false)
 
+  // useEffect(() => {
+  //   const result = resolveRunnerMovement({
+  //     bases: {
+  //       first: null,
+  //       second: null,
+  //       third: null,
+  //     },
+
+  //     batter: {
+  //       id: "1",
+  //       name: "Jake",
+  //     },
+
+  //     batterDestination: "1B",
+  //     runnerDecisions: {},
+  //   })
+
+  //   console.log("Runner engine result:", result)
+  // }, [])
+
   useEffect(() => {
     async function loadHomeData() {
       try {
-        const active = await getActiveGame()
-        const finished = await getFinishedGames()
-
-        setActiveGame(active)
-        setFinishedGames(finished || [])
+        const [currentGame, completedGames] = await Promise.all([
+          getActiveGame(),
+          getFinishedGames(),
+        ])
+  
+        console.log("Active game:", currentGame)
+        console.log("Finished games:", completedGames)
+  
+        setActiveGame(currentGame)
+        setFinishedGames(completedGames)
       } catch (error) {
-        console.error("Could not load home data:", error)
+        console.error("Could not load game data:", error)
       } finally {
         setLoading(false)
       }
     }
-
+  
     loadHomeData()
   }, [])
 
@@ -69,11 +142,21 @@ export default function TapScorePrototype() {
       <HomeScreen
         activeGame={activeGame}
         finishedGames={finishedGames}
-        onResume={() => {
+        onResume={(selectedGame) => {
+          const savedState = selectedGame.state ?? selectedGame.game_state
+        
+          if (!savedState) {
+            console.error("Active game has no saved state:", selectedGame)
+            alert("This game does not contain a saved game state.")
+            return
+          }
+        
           dispatch({
             type: "LOAD_GAME",
-            game: activeGame.state,
+            game: savedState,
           })
+        
+          setActiveGame(selectedGame)
           setScreen("scoring")
         }}
         onNewGame={() => {
@@ -122,7 +205,7 @@ export default function TapScorePrototype() {
     <main className="min-h-screen bg-green-950 text-white p-4">
       <div className="mx-auto max-w-md space-y-4">
         <Scoreboard game={game} />
-        <BaseDiamond bases={game.bases} />
+        <BaseRunnersField bases={game.bases} />
 
         <CountControls game={game} dispatch={dispatch} />
 
@@ -142,23 +225,53 @@ export default function TapScorePrototype() {
     bases={game.bases}
     onCancel={() => setPendingHitType(null)}
     onConfirm={async (resolution) => {
-      await handleGameAction({
-        game,
-        dispatch,
-        action: {
-          type: "RESOLVE_HIT",
-          resolution,
-        },
-        eventType: resolution.playType,
-        label: `${resolution.playType} - ${getCurrentBatter(game).name}`,
-        extraEventData: {
-          runs: resolution.runs,
-          rbi: resolution.rbi,
-          details: resolution.details,
-        },
-      })
-
-      setPendingHitType(null)
+      try {
+        console.log("Resolution received:", resolution)
+    
+        const runnerResult = resolveRunnerMovement({
+          bases: game.bases,
+          batter: getCurrentBatter(game),
+          batterDestination: resolution.batterDestination,
+          runnerDecisions: resolution.runnerDecisions,
+        })
+    
+        console.log("Runner Engine Result:", runnerResult)
+    
+        const resolvedPlay = {
+          ...resolution,
+          runnerAdvances: runnerResult.runnerAdvances,
+          bases: runnerResult.bases,
+          runs: runnerResult.runsScored,
+          outsRecorded: runnerResult.outsRecorded,
+          details: {
+            ...resolution.details,
+            runnerAdvances: runnerResult.runnerAdvances,
+            resultingBases: runnerResult.bases,
+          },
+        }
+    
+        await handleGameAction({
+          game,
+          dispatch,
+          action: {
+            type: "RESOLVE_HIT",
+            resolution: resolvedPlay,
+          },
+          eventType: resolvedPlay.playType,
+          label: `${resolvedPlay.playType} - ${getCurrentBatter(game).name}`,
+          extraEventData: {
+            runs: resolvedPlay.runs,
+            rbi: resolvedPlay.rbi,
+            outs_recorded: resolvedPlay.outsRecorded,
+            details: resolvedPlay.details,
+          },
+        })
+    
+        setPendingHitType(null)
+      } catch (error) {
+        console.error("Could not resolve play:", error)
+        alert(error.message || "Could not resolve play")
+      }
     }}
   />
 )}

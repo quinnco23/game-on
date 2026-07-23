@@ -6,125 +6,322 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
-    --color-sidebar-ring: var(--sidebar-ring);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar: var(--sidebar);
-    --color-chart-5: var(--chart-5);
-    --color-chart-4: var(--chart-4);
-    --color-chart-3: var(--chart-3);
-    --color-chart-2: var(--chart-2);
-    --color-chart-1: var(--chart-1);
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --font-heading: var(--font-scoreboard);
+  --font-sans: "Geist Variable", sans-serif;
+  --font-scoreboard: "Arial Narrow", "Roboto Condensed", sans-serif;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  /* Vintage scoreboard colors */
+  --color-scoreboard: var(--scoreboard);
+  --color-scoreboard-dark: var(--scoreboard-dark);
+  --color-scoreboard-light: var(--scoreboard-light);
+  --color-scoreboard-cream: var(--scoreboard-cream);
+  --color-scoreboard-muted: var(--scoreboard-muted);
+  --color-scoreboard-red: var(--scoreboard-red);
+  --color-scoreboard-amber: var(--scoreboard-amber);
+  --color-scoreboard-black: var(--scoreboard-black);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+  /* Vintage scoreboard palette */
+  --scoreboard: #203f30;
+  --scoreboard-dark: #122a1f;
+  --scoreboard-light: #304f3d;
+  --scoreboard-cream: #efe8cf;
+  --scoreboard-muted: #bebda0;
+  --scoreboard-red: #9d2f2a;
+  --scoreboard-amber: #daaa3d;
+  --scoreboard-black: #0c140f;
+
+  /* Make the scoreboard theme the default app theme */
+  --background: var(--scoreboard-dark);
+  --foreground: var(--scoreboard-cream);
+
+  --card: var(--scoreboard);
+  --card-foreground: var(--scoreboard-cream);
+
+  --popover: var(--scoreboard);
+  --popover-foreground: var(--scoreboard-cream);
+
+  --primary: var(--scoreboard-amber);
+  --primary-foreground: var(--scoreboard-black);
+
+  --secondary: var(--scoreboard-light);
+  --secondary-foreground: var(--scoreboard-cream);
+
+  --muted: #294535;
+  --muted-foreground: var(--scoreboard-muted);
+
+  --accent: var(--scoreboard-red);
+  --accent-foreground: var(--scoreboard-cream);
+
+  --destructive: #b23a34;
+  --destructive-foreground: var(--scoreboard-cream);
+
+  --border: color-mix(
+    in srgb,
+    var(--scoreboard-cream) 35%,
+    transparent
+  );
+
+  --input: color-mix(
+    in srgb,
+    var(--scoreboard-cream) 25%,
+    transparent
+  );
+
+  --ring: var(--scoreboard-amber);
+
+  --chart-1: var(--scoreboard-amber);
+  --chart-2: var(--scoreboard-red);
+  --chart-3: var(--scoreboard-cream);
+  --chart-4: var(--scoreboard-light);
+  --chart-5: var(--scoreboard-muted);
+
+  --radius: 0.25rem;
+
+  --sidebar: var(--scoreboard);
+  --sidebar-foreground: var(--scoreboard-cream);
+  --sidebar-primary: var(--scoreboard-amber);
+  --sidebar-primary-foreground: var(--scoreboard-black);
+  --sidebar-accent: var(--scoreboard-light);
+  --sidebar-accent-foreground: var(--scoreboard-cream);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--scoreboard-amber);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+  /*
+    The app already uses a dark scoreboard theme,
+    so these can match the root values.
+  */
+  --background: var(--scoreboard-dark);
+  --foreground: var(--scoreboard-cream);
+  --card: var(--scoreboard);
+  --card-foreground: var(--scoreboard-cream);
+  --popover: var(--scoreboard);
+  --popover-foreground: var(--scoreboard-cream);
+  --primary: var(--scoreboard-amber);
+  --primary-foreground: var(--scoreboard-black);
+  --secondary: var(--scoreboard-light);
+  --secondary-foreground: var(--scoreboard-cream);
+  --muted: #294535;
+  --muted-foreground: var(--scoreboard-muted);
+  --accent: var(--scoreboard-red);
+  --accent-foreground: var(--scoreboard-cream);
+  --destructive: #b23a34;
+  --destructive-foreground: var(--scoreboard-cream);
+  --border: color-mix(
+    in srgb,
+    var(--scoreboard-cream) 35%,
+    transparent
+  );
+  --input: color-mix(
+    in srgb,
+    var(--scoreboard-cream) 25%,
+    transparent
+  );
+  --ring: var(--scoreboard-amber);
+
+  --sidebar: var(--scoreboard);
+  --sidebar-foreground: var(--scoreboard-cream);
+  --sidebar-primary: var(--scoreboard-amber);
+  --sidebar-primary-foreground: var(--scoreboard-black);
+  --sidebar-accent: var(--scoreboard-light);
+  --sidebar-accent-foreground: var(--scoreboard-cream);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--scoreboard-amber);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
-  body {
-    @apply bg-background text-foreground;
-    }
+  }
+
   html {
     @apply font-sans;
-    }
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground;
+    background-image:
+      radial-gradient(
+        circle at top,
+        rgb(255 255 255 / 4%),
+        transparent 32rem
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent 0,
+        transparent 4px,
+        rgb(255 255 255 / 1%) 5px
+      );
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .scoreboard-shell {
+    @apply min-h-screen bg-scoreboard-dark text-scoreboard-cream;
+  }
+
+  .scoreboard-panel {
+    @apply relative overflow-hidden border border-scoreboard-cream/40 bg-scoreboard;
+    box-shadow:
+      0 20px 50px rgb(7 16 11 / 45%),
+      inset 0 1px rgb(255 255 255 / 5%);
+  }
+
+  .scoreboard-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 3px,
+      rgb(255 255 255 / 1.2%) 4px
+    );
+  }
+
+  .scoreboard-title {
+    @apply font-heading text-xl font-bold uppercase tracking-[0.14em] text-scoreboard-cream;
+  }
+
+  .scoreboard-label {
+    @apply font-heading text-xs font-semibold uppercase tracking-[0.1em] text-scoreboard-muted;
+  }
+
+  .scoreboard-number {
+    @apply font-heading text-3xl font-bold tabular-nums tracking-wider text-scoreboard-cream;
+  }
+
+  .scoreboard-button {
+    @apply border border-scoreboard-cream/70 bg-scoreboard px-4 py-3 font-heading text-sm font-bold uppercase tracking-[0.1em] text-scoreboard-cream transition;
+    box-shadow:
+      inset 0 2px 5px rgb(0 0 0 / 35%),
+      inset 0 -1px rgb(255 255 255 / 4%);
+  }
+
+  .scoreboard-button:hover {
+    @apply bg-scoreboard-light;
+  }
+
+  .scoreboard-button:active {
+    @apply translate-y-px bg-scoreboard-dark;
+  }
+
+  .scoreboard-button-primary {
+    @apply border-scoreboard-amber bg-scoreboard-amber text-scoreboard-black;
+  }
+
+  .scoreboard-button-danger {
+    @apply border-scoreboard-red bg-scoreboard-red text-scoreboard-cream;
+  }
+
+  .scoreboard-input {
+    @apply w-full border border-scoreboard-cream/50 bg-scoreboard-dark px-3 py-2 font-heading uppercase tracking-wide text-scoreboard-cream outline-none placeholder:text-scoreboard-muted/60 focus:border-scoreboard-amber;
+  }
+
+  .scoreboard-light {
+    @apply inline-block size-3 rounded-full border border-scoreboard-black/70 bg-scoreboard-dark shadow-inner;
+  }
+
+  .scoreboard-light-active {
+    @apply bg-scoreboard-amber;
+    box-shadow: 0 0 10px rgb(218 170 61 / 75%);
+  }
+
+
+
+  @layer components {
+  .ballpark-card {
+    @apply relative overflow-hidden rounded-sm border border-scoreboard-cream/35 bg-scoreboard text-scoreboard-cream;
+    box-shadow:
+      0 18px 45px rgb(5 15 10 / 45%),
+      inset 0 1px rgb(255 255 255 / 5%);
+  }
+
+  .ballpark-header {
+    @apply border-b-2 border-scoreboard-red pb-4 text-center;
+  }
+
+  .ballpark-canvas {
+    @apply relative mx-auto aspect-[16/11] w-full overflow-hidden border border-scoreboard-cream/25 bg-scoreboard-dark;
+  }
+
+  .ballpark-base {
+    @apply absolute z-20 flex h-8 w-8 rotate-45 items-center justify-center border-2 font-heading text-[9px] font-bold uppercase;
+  }
+
+  .ballpark-base-empty {
+    @apply border-scoreboard-cream/80 bg-scoreboard-cream text-scoreboard-dark;
+  }
+
+  .ballpark-base-occupied {
+    @apply border-scoreboard-amber bg-scoreboard-amber text-scoreboard-black;
+    box-shadow: 0 0 14px rgb(218 170 61 / 75%);
+  }
+
+  .ballpark-base-label {
+    @apply -rotate-45;
+  }
+
+  .ballpark-legend {
+    @apply border border-scoreboard-cream/30 bg-scoreboard-dark/85 p-3;
+  }
+
+  .ballpark-legend-row {
+    @apply flex items-center gap-2 font-heading text-[10px] font-semibold uppercase tracking-[0.12em] text-scoreboard-cream;
+  }
+}
 }

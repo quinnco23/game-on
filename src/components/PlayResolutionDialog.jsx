@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 
@@ -60,7 +60,11 @@ export function PlayResolutionDialog({
     runnerAdvances.filter((advance) => advance.to === "home").length +
     (batterDestination === "home" ? 1 : 0)
 
-  const [rbi, setRbi] = useState(runsScored)
+    const [rbi, setRbi] = useState(runsScored)
+
+    useEffect(() => {
+      setRbi(runsScored)
+    }, [runsScored])
 
   function updateRunner(index, to) {
     setRunnerAdvances((current) =>
@@ -78,11 +82,20 @@ export function PlayResolutionDialog({
   }
 
   function submit() {
-    onConfirm({
+    const runnerDecisions = {}
+  
+    runnerAdvances.forEach((advance) => {
+      runnerDecisions[advance.from] =
+        advance.to === "stay"
+          ? advance.from
+          : advance.to
+    })
+  
+    const resolution = {
       playType,
       batterId: batter.id,
       batterDestination,
-      runnerAdvances,
+      runnerDecisions,
       runs: runsScored,
       rbi,
       details: {
@@ -92,13 +105,19 @@ export function PlayResolutionDialog({
           runnerId: advance.runnerId,
           runnerName: advance.runner.name,
           from: advance.from,
-          to: advance.to,
-          scored: advance.scored,
-          out: advance.out,
+          to:
+            advance.to === "stay"
+              ? advance.from
+              : advance.to,
+          scored: advance.to === "home",
+          out: advance.to === "out",
         })),
       },
-    })
-    
+    }
+  
+    console.log("Submitting play resolution:", resolution)
+  
+    onConfirm(resolution)
   }
 
   return (

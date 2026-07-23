@@ -64,6 +64,9 @@ export function gameReducer(state, action) {
 
     case "OUT":
       return applyOut(state, action.label || "Out");
+      
+      case "REACHED_ON_ERROR":
+        return applyReachedOnError(state, action)
 
     case "SINGLE":
       return applyHit(state, "Single", 1);

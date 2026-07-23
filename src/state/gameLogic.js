@@ -244,51 +244,52 @@ export function applyResolvedHit(state, resolution) {
   const battingTeam = getBattingTeam(state)
   const batter = getCurrentBatter(state)
 
+  const runsScored = Number(
+    resolution.runs ??
+    resolution.runsScored ??
+    0
+  )
+
   let nextState = resetCount(state)
 
-  const nextBases = {
-    first: null,
-    second: null,
-    third: null,
-  }
-
-  function placeRunner(runner, destination) {
-    if (!runner) return
-
-    if (destination === "home") {
-      nextState = scoreRun(nextState, battingTeam, 1)
-    }
-
-    if (destination === "first") nextBases.first = runner
-    if (destination === "second") nextBases.second = runner
-    if (destination === "third") nextBases.third = runner
-  }
-
-  // existing runners
-  resolution.runnerAdvances.forEach((advance) => {
-    if (advance.to === "stay") {
-      placeRunner(advance.runner, advance.from)
-    } else if (advance.to !== "out") {
-      placeRunner(advance.runner, advance.to)
-    }
-  })
-
-  // batter
-  if (resolution.batterDestination !== "out") {
-    placeRunner(batter, resolution.batterDestination)
-  }
-
-  const next = advanceBattingOrder({
+  // The runner engine is authoritative.
+  nextState = {
     ...nextState,
-    bases: nextBases,
+
+    bases: {
+      first: resolution.bases?.first ?? null,
+      second: resolution.bases?.second ?? null,
+      third: resolution.bases?.third ?? null,
+    },
+  }
+
+  if (runsScored > 0) {
+    nextState = scoreRun(
+      nextState,
+      battingTeam,
+      runsScored
+    )
+  }
+
+  nextState = advanceBattingOrder(nextState)
+
+  console.log("Applying resolved play:", {
+    playType: resolution.playType,
+    batter: batter?.name,
+    bases: nextState.bases,
+    runsScored,
+    rbi: resolution.rbi,
   })
 
-  return logEvent(next, {
+  return logEvent(nextState, {
     event_type: resolution.playType,
     label: `${resolution.playType} - ${formatPlayer(batter)}`,
-    player_id: batter.id,
-    runs: resolution.runs,
-    rbi: resolution.rbi,
+    player_id: batter?.id ?? resolution.batterId ?? null,
+    runs: runsScored,
+    rbi: Number(resolution.rbi || 0),
+    outs_recorded: Number(
+      resolution.outsRecorded || 0
+    ),
     details: resolution.details,
   })
 }
