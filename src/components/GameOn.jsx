@@ -12,7 +12,7 @@ import { HomeScreen } from "./HomeScreen"
 import { CountControls } from "./CountControls"
 import GameSetupScreen from "./GameSetupScreen"
 import { Scoreboard } from "./Scoreboard"
-import { BaseDiamond } from "./BaseDiamond"
+// import { BaseDiamond } from "./BaseDiamond"
 import { PlayControls } from "./PlayControls"
 import { EventFeed } from "./EventFeed"
 import { Button } from "./ui/button"
@@ -254,7 +254,7 @@ export default function TapScorePrototype() {
           game,
           dispatch,
           action: {
-            type: "RESOLVE_HIT",
+            type: "RESOLVE_PLAY",
             resolution: resolvedPlay,
           },
           eventType: resolvedPlay.playType,

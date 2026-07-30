@@ -143,7 +143,7 @@ export function CountControls({ game, dispatch }) {
         dispatch,
         action: {
           // Use your existing resolution reducer path.
-          type: "RESOLVE_HIT",
+          type: "RESOLVE_PLAY",
           resolution,
         },
         eventType: "walk",

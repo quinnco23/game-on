@@ -52,9 +52,9 @@ export function BaseRunnersField({
               >
                 <stop offset="0%" stopColor="#173f2d" />
                 <stop offset="100%" stopColor="#0d281d" />
-              </linearGradient>
+              </linearGradient> 
 
-              <radialGradient
+               <radialGradient
                 id="fieldGrass"
                 cx="50%"
                 cy="72%"
@@ -62,7 +62,7 @@ export function BaseRunnersField({
               >
                 <stop offset="0%" stopColor="#396d3d" />
                 <stop offset="100%" stopColor="#1e4d30" />
-              </radialGradient>
+              </radialGradient> *
 
               <radialGradient
                 id="infieldDirt"
@@ -106,7 +106,7 @@ export function BaseRunnersField({
                 <rect
                   width="36"
                   height="72"
-                  fill="rgb(255 255 255 / 3%)"
+                  fill="rgb(0 0 0 / 3%)"
                 />
                 <rect
                   x="36"
@@ -212,7 +212,7 @@ export function BaseRunnersField({
               <line
                 x1="450"
                 y1="565"
-                x2="810"
+                x2="800"
                 y2="275"
                 stroke="#efe8cf"
                 strokeOpacity="0.88"
@@ -245,8 +245,8 @@ export function BaseRunnersField({
             <path
               d="
                 M 90 275
-                Q 145 85 450 55
-                Q 755 85 810 275
+                Q 145 75 450 65
+                Q 755 75 810 275
               "
               fill="none"
               stroke="#8d754d"
@@ -256,7 +256,7 @@ export function BaseRunnersField({
             <path
               d="
                 M 90 275
-                Q 145 85 450 55
+                Q 145 85 450 65
                 Q 755 85 810 275
               "
               fill="none"
@@ -265,7 +265,7 @@ export function BaseRunnersField({
             />
 
             {/* Trees across outfield */}
-            <g filter="url(#treeShadow)">
+            {/* <g filter="url(#treeShadow)">
               {[
                 [95, 216, 42],
                 [130, 150, 50],
@@ -309,10 +309,10 @@ export function BaseRunnersField({
                   />
                 </g>
               ))}
-            </g>
+            </g> */}
 
             {/* Left-side bleachers */}
-            <g transform="translate(90 330) rotate(12)">
+            {/* <g transform="translate(90 330) rotate(12)">
               <rect
                 x="0"
                 y="0"
@@ -321,9 +321,9 @@ export function BaseRunnersField({
                 fill="#252d28"
                 stroke="#756e5e"
                 strokeWidth="3"
-              />
+              /> */}
 
-              {Array.from({ length: 9 }).map((_, index) => (
+              {/* {Array.from({ length: 9 }).map((_, index) => (
                 <rect
                   key={index}
                   x="10"
@@ -341,10 +341,10 @@ export function BaseRunnersField({
                 height="28"
                 fill="#4e473a"
               />
-            </g>
+            </g> */}
 
             {/* Left dugout */}
-            <g transform="translate(150 260) rotate(12)">
+            {/* <g transform="translate(150 260) rotate(12)">
               <rect
                 width="92"
                 height="58"
@@ -358,10 +358,10 @@ export function BaseRunnersField({
                 stroke="#83775d"
                 strokeWidth="2"
               />
-            </g>
+            </g> */}
 
             {/* Right-side building / covered bleachers */}
-            <g transform="translate(675 350) rotate(-20)">
+            {/* <g transform="translate(675 350) rotate(-20)">
               <rect
                 x="0"
                 y="0"
@@ -394,10 +394,10 @@ export function BaseRunnersField({
                   opacity="0.7"
                 />
               ))}
-            </g>
+            </g> */}
 
             {/* Right-side trees */}
-            <g filter="url(#treeShadow)">
+            {/* <g filter="url(#treeShadow)">
               {[
                 [760, 300, 38],
                 [790, 330, 45],
@@ -426,13 +426,13 @@ export function BaseRunnersField({
                   />
                 </g>
               ))}
-            </g>
+            </g> */}
 
             {/* Home plate dirt */}
             <circle
               cx="450"
               cy="550"
-              r="44"
+              r="34"
               fill="#9d7047"
               opacity="0.95"
             />
@@ -474,7 +474,7 @@ export function BaseRunnersField({
             </text>
 
             {/* Light poles */}
-            <g>
+            {/* <g>
               <line
                 x1="135"
                 y1="320"
@@ -504,7 +504,7 @@ export function BaseRunnersField({
                 r="11"
                 fill="#d8d4be"
               />
-            </g>
+            </g> */}
           </svg>
 
           {/* Interactive bases */}
@@ -538,7 +538,7 @@ export function BaseRunnersField({
           <div
             className="
               absolute bottom-[5.5%] left-1/2 z-20
-              flex h-8 w-9 -translate-x-1/2 items-center
+              flex h-6 w-7 -translate-x-1/2 items-center
               justify-center bg-scoreboard-cream font-heading
               text-[9px] font-bold text-scoreboard-dark
               [clip-path:polygon(0_0,100%_0,100%_58%,50%_100%,0_58%)]
@@ -548,7 +548,7 @@ export function BaseRunnersField({
           </div>
 
           {/* Legend */}
-          <div className="ballpark-legend absolute bottom-3 right-3 hidden space-y-2 sm:block">
+          {/* <div className="ballpark-legend absolute bottom-3 right-3 hidden space-y-2 sm:block">
             <div className="ballpark-legend-row">
               <span className="size-3 rounded-full bg-scoreboard-amber shadow-[0_0_8px_rgb(218_170_61/75%)]" />
               Runner on base
@@ -558,7 +558,7 @@ export function BaseRunnersField({
               <span className="size-3 rounded-full border border-scoreboard-cream/70 bg-scoreboard-dark" />
               Base empty
             </div>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

@@ -59,7 +59,7 @@ export function gameReducer(state, action) {
     }
 
 
-    case "RESOLVE_HIT":
+    case "RESOLVE_PLAY":
       return applyResolvedHit(state, action.resolution);
 
     case "OUT":

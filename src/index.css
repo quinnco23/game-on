@@ -300,9 +300,9 @@
   }
 
   .ballpark-base {
-    @apply absolute z-20 flex h-8 w-8 rotate-45 items-center justify-center border-2 font-heading text-[9px] font-bold uppercase;
+    @apply absolute z-20 flex h-5 w-5  rotate-45 items-center justify-center border-2 font-heading text-[9px] font-bold uppercase;
   }
-
+  
   .ballpark-base-empty {
     @apply border-scoreboard-cream/80 bg-scoreboard-cream text-scoreboard-dark;
   }
