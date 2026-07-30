@@ -74,7 +74,52 @@ export const PLAY_TYPES = {
         isAtBat: true,
       },
     },
+
+    fielderChoice: {
+        batterDestination: "first",
+        holdExistingRunners: true,
+      
+        metadata: {
+          category: "ballInPlay",
+          resultType: "fielderChoice",
+          battedBallType: "groundBall",
+          isAtBat: true,
+          isHit: false,
+        },
+      },
+
+      reachedOnError: {
+        batterDestination: "first",
+        holdExistingRunners: true,
+      
+        metadata: {
+          category: "ballInPlay",
+          resultType: "reachedOnError",
+          battedBallType: "groundBall",
+          isAtBat: true,
+          isHit: false,
+          isError: true,
+        },
+      },
+
+      groundOut: {
+        batterDestination: "out",
+        holdExistingRunners: true,
+      
+        metadata: {
+          category: "out",
+          resultType: "groundOut",
+          outType: "groundOut",
+          battedBallType: "groundBall",
+          isAtBat: true,
+          isHit: false,
+          rbiEligible: true,
+        },
+      },
+      
   };
+
+  
   
   export function getPlayDefinition(playType) {
     return PLAY_TYPES[playType] ?? null;
