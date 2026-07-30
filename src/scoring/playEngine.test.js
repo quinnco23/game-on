@@ -782,5 +782,448 @@ expect(result.state.outs).toBe(1);
       third: null,
     });
   });
+
+  it("records a fly out and leaves all runners in place", () => {
+    const gameState = {
+      version: 0,
+      inning: 2,
+      half: "top",
+      outs: 1,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: {
+          id: "2",
+          name: "Sam",
+        },
+        second: null,
+        third: {
+          id: "3",
+          name: "Alex",
+        },
+      },
+    };
+  
+    const result = applyPlay(gameState, {
+      id: "play-fly-out-1",
+      playType: "flyOut",
+      batter: {
+        id: "1",
+        name: "Taylor",
+      },
+    });
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.state.outs).toBe(2);
+  
+    expect(result.state.bases).toEqual({
+      first: {
+        id: "2",
+        name: "Sam",
+      },
+      second: null,
+      third: {
+        id: "3",
+        name: "Alex",
+      },
+    });
+  
+    expect(result.state.score).toEqual({
+      home: 0,
+      away: 0,
+    });
+  });
+ 
+it("ends the half inning when a fly out records the third out", () => {
+    const gameState = {
+      version: 0,
+      inning: 2,
+      half: "top",
+      outs: 2,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: {
+          id: "2",
+          name: "Sam",
+        },
+        second: null,
+        third: {
+          id: "3",
+          name: "Alex",
+        },
+      },
+    };
+  
+    const result = applyPlay(gameState, {
+      id: "play-fly-out-2",
+      playType: "flyOut",
+      batter: {
+        id: "1",
+        name: "Taylor",
+      },
+    });
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.metadata.halfInningEnded).toBe(true);
+  
+    expect(result.state.outs).toBe(0);
+    expect(result.state.half).toBe("bottom");
+    expect(result.state.inning).toBe(2);
+  
+    expect(result.state.bases).toEqual({
+      first: null,
+      second: null,
+      third: null,
+    });
+  });
+
+  it("allows a runner to tag up and score on a fly out", () => {
+    const gameState = {
+      version: 0,
+      inning: 2,
+      half: "top",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: null,
+        second: null,
+        third: {
+          id: "3",
+          name: "Alex",
+        },
+      },
+    };
+  
+    const result = applyPlay(
+      gameState,
+      {
+        id: "play-fly-out-tag-up",
+        playType: "flyOut",
+        batter: {
+          id: "1",
+          name: "Taylor",
+        },
+      },
+      {
+        runnerDecisions: {
+          third: "home",
+        },
+      },
+    );
+  
+    expect(result.ok).toBe(true);
+  
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.metadata.runsScored).toBe(1);
+  
+    expect(result.state.outs).toBe(1);
+    expect(result.state.score.away).toBe(1);
+  
+    expect(result.state.bases).toEqual({
+      first: null,
+      second: null,
+      third: null,
+    });
+  });
+
+  it("allows a runner to tag from second to third on a fly out", () => {
+    const gameState = {
+      version: 0,
+      inning: 2,
+      half: "bottom",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: null,
+        second: {
+          id: "2",
+          name: "Sam",
+        },
+        third: null,
+      },
+    };
+  
+    const result = applyPlay(
+      gameState,
+      {
+        id: "play-fly-out-tag-second",
+        playType: "flyOut",
+        batter: {
+          id: "1",
+          name: "Taylor",
+        },
+      },
+      {
+        runnerDecisions: {
+          second: "third",
+        },
+      },
+    );
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.metadata.runsScored).toBe(0);
+  
+    expect(result.state.bases).toEqual({
+      first: null,
+      second: null,
+      third: {
+        id: "2",
+        name: "Sam",
+      },
+    });
+  });
+  it("records the batter and tagging runner as outs on a fly out", () => {
+    const gameState = {
+      version: 0,
+      inning: 2,
+      half: "top",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: null,
+        second: null,
+        third: {
+          id: "3",
+          name: "Alex",
+        },
+      },
+    };
+  
+    const result = applyPlay(
+      gameState,
+      {
+        id: "play-fly-out-runner-out",
+        playType: "flyOut",
+        batter: {
+          id: "1",
+          name: "Taylor",
+        },
+      },
+      {
+        runnerDecisions: {
+          third: "out",
+        },
+      },
+    );
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(2);
+    expect(result.metadata.runsScored).toBe(0);
+    expect(result.state.outs).toBe(2);
+  
+    expect(result.state.bases).toEqual({
+      first: null,
+      second: null,
+      third: null,
+    });
+  });
+
+  it("records a ground out and leaves runners in place by default", () => {
+    const gameState = {
+      version: 0,
+      inning: 3,
+      half: "top",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: {
+          id: "runner-1",
+          name: "Sam",
+        },
+        second: null,
+        third: {
+          id: "runner-3",
+          name: "Alex",
+        },
+      },
+    };
+  
+    const result = applyPlay(gameState, {
+      id: "play-ground-out-1",
+      playType: "groundOut",
+      batter: {
+        id: "batter-1",
+        name: "Taylor",
+      },
+      metadata: {
+        fielders: ["SS", "1B"],
+        notation: "6-3",
+      },
+    });
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.metadata.runsScored).toBe(0);
+  
+    expect(result.state.outs).toBe(1);
+  
+    expect(result.state.bases).toEqual({
+      first: {
+        id: "runner-1",
+        name: "Sam",
+      },
+      second: null,
+      third: {
+        id: "runner-3",
+        name: "Alex",
+      },
+    });
+  });
+
+  it("allows a runner from third to score on a ground out", () => {
+    const gameState = {
+      version: 0,
+      inning: 3,
+      half: "top",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: null,
+        second: null,
+        third: {
+          id: "runner-3",
+          name: "Alex",
+        },
+      },
+    };
+  
+    const result = applyPlay(
+      gameState,
+      {
+        id: "play-ground-out-rbi",
+        playType: "groundOut",
+        batter: {
+          id: "batter-1",
+          name: "Taylor",
+        },
+        metadata: {
+          fielders: ["2B", "1B"],
+          notation: "4-3",
+        },
+      },
+      {
+        runnerDecisions: {
+          third: "home",
+        },
+      },
+    );
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.metadata.runsScored).toBe(1);
+  
+    expect(result.state.outs).toBe(1);
+    expect(result.state.score.away).toBe(1);
+  
+    expect(result.state.bases).toEqual({
+      first: null,
+      second: null,
+      third: null,
+    });
+  });
+
+  it("accepts metadata for an unassisted ground out", () => {
+    const gameState = {
+      version: 0,
+      inning: 1,
+      half: "top",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: null,
+        second: null,
+        third: null,
+      },
+    };
+  
+    const result = applyPlay(gameState, {
+      id: "play-ground-out-unassisted",
+      playType: "groundOut",
+      batter: {
+        id: "batter-1",
+        name: "Taylor",
+      },
+      metadata: {
+        fielders: ["1B"],
+        notation: "3U",
+        unassisted: true,
+      },
+    });
+  
+    expect(result.ok).toBe(true);
+    expect(result.metadata.outsRecorded).toBe(1);
+    expect(result.state.outs).toBe(1);
+  });
+  it("preserves ground-out event metadata", () => {
+    const gameState = {
+      version: 0,
+      inning: 1,
+      half: "top",
+      outs: 0,
+      score: {
+        home: 0,
+        away: 0,
+      },
+      bases: {
+        first: null,
+        second: null,
+        third: null,
+      },
+    };
+  
+    const result = applyPlay(gameState, {
+      id: "play-ground-out-metadata",
+      playType: "groundOut",
+      batter: {
+        id: "batter-1",
+        name: "Taylor",
+      },
+      metadata: {
+        fielders: ["SS", "1B"],
+        notation: "6-3",
+        direction: "leftSide",
+      },
+    });
+  
+    expect(result.ok).toBe(true);
+  
+    expect(result.metadata.event).toEqual({
+      fielders: ["SS", "1B"],
+      notation: "6-3",
+      direction: "leftSide",
+    });
+  
+    expect(result.metadata.playDefinition).toMatchObject({
+      category: "out",
+      outType: "groundOut",
+      battedBallType: "groundBall",
+    });
+  });
   
 });

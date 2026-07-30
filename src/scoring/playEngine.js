@@ -121,10 +121,19 @@ const runsScored =
       warnings,
       metadata: {
         playId: playResult.id,
+        playType: playResult.playType,
+      
+        // Static information from playTypes.js
+        playDefinition: playDefinition?.metadata ?? {},
+      
+        // Information supplied for this specific play
+        event: playResult.metadata ?? {},
+      
         previousVersion,
         nextVersion: previousVersion + 1,
         runsScored,
         outsRecorded,
+        runnerAdvances: runnerResult.runnerAdvances ?? [],
         thirdOutWasForce,
         halfInningEnded,
         runScoredAfterThirdOut,

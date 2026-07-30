@@ -34,23 +34,7 @@ export function resolveRunnerMovement({
    * A strikeout or similar stationary out preserves all existing runners.
    * The batter is still recorded as out.
    */
-  if (holdExistingRunners) {
-    const batterResult = resolveDestination({
-      runner: batter,
-      origin: "batter",
-      destination: batterDestination,
-    });
 
-    return {
-      ok: true,
-      bases: currentBases,
-      runsScored: batterResult.runsScored,
-      outsRecorded: batterResult.outsRecorded,
-      runnerAdvances: batterResult.runnerAdvance
-        ? [batterResult.runnerAdvance]
-        : [],
-    };
-  }
 
   const nextBases = {
     first: null,
