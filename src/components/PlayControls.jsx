@@ -1,7 +1,7 @@
 import { Card, CardContent } from "./ui/card"
 import { Button } from "./ui/button"
 import { Mic, Zap, Undo2 } from "lucide-react"
-import { handleGameAction } from "../services/handleGameAction"
+import { handleGameAction } from "../services/GameActions"
 
 export function PlayControls({
   game,
@@ -38,7 +38,9 @@ export function PlayControls({
 
           <Button
             className="rounded-2xl py-6"
-            onClick={() => onOpenPlayResolution("home_run")}
+            onClick={() =>
+              onOpenPlayResolution("homeRun")
+            }
           >
             HR
           </Button>

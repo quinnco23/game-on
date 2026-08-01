@@ -33,24 +33,34 @@ describe("playEngine", () => {
 
 
   it("places the batter on first after a single", () => {
-  const game = createGameState({
-    status: "active",
-  });
-
-  const play = {
-    playType: "single",
-    batter: {
+    const game = createGameState({
+      status: "active",
+    });
+  
+    const play = {
+      playType: "single",
+      batter: {
+        id: "1",
+        name: "Jake",
+      },
+    };
+  
+    const result = applyPlay(game, play);
+  
+    expect(result.ok).toBe(true);
+  
+    expect(result.state.bases.first).toEqual({
       id: "1",
       name: "Jake",
-    },
-  };
-
-  const result = applyPlay(game, play);
-
-  expect(result.ok).toBe(true);
-  expect(result.state.bases.first).toEqual({
-    id: "1",
-    name: "Jake",
+    });
+  
+    expect(result.metadata.batterStats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 1,
+      hits: 1,
+      singles: 1,
+      totalBases: 1,
+    });
   });
 });
 
@@ -1600,6 +1610,32 @@ it("ends the half inning when a fly out records the third out", () => {
     expect(result.metadata.isRbiPlay).toBe(true);
   
     expect(result.state.score.away).toBe(1);
+
+    expect(result.metadata.batterStats).toEqual({
+        plateAppearances: 1,
+        atBats: 1,
+      
+        hits: 0,
+        singles: 0,
+        doubles: 0,
+        triples: 0,
+        homeRuns: 0,
+      
+        walks: 0,
+        strikeouts: 0,
+      
+        runs: 0,
+        rbi: 1,
+      
+        totalBases: 0,
+      
+        reachedOnError: 0,
+        fieldersChoices: 0,
+        groundedIntoDoublePlay: 0,
+      
+        runsProduced: 1,
+      });
+
   });
 
   it("does not credit an RBI when no run scores on a ground out", () => {
@@ -1690,5 +1726,59 @@ it("ends the half inning when a fly out records the third out", () => {
     expect(result.metadata.rbiCount).toBe(0);
     expect(result.metadata.isRbiPlay).toBe(false);
   });
+
+  it("derives fielding stats for a 6-3 ground out", () => {
+    const gameState = {
+      version: 1,
+      inning: 1,
+      half: "top",
+      outs: 0,
   
-});
+      score: {
+        home: 0,
+        away: 0,
+      },
+  
+      bases: {
+        first: null,
+        second: null,
+        third: null,
+      },
+    };
+  
+    const result = applyPlay(gameState, {
+      playType: "groundOut",
+  
+      metadata: {
+        fielding: {
+          putouts: ["first-baseman"],
+          assists: ["shortstop"],
+          errors: [],
+        },
+      },
+    });
+  
+    expect(result.ok).toBe(true);
+  
+    expect(result.metadata.fielderStats).toEqual([
+      {
+        fielderId: "first-baseman",
+        putouts: 1,
+        assists: 0,
+        errors: 0,
+        doublePlays: 0,
+        triplePlays: 0,
+      },
+      {
+        fielderId: "shortstop",
+        putouts: 0,
+        assists: 1,
+        errors: 0,
+        doublePlays: 0,
+        triplePlays: 0,
+      },
+    ]);
+  });
+
+  
+  

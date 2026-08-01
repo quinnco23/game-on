@@ -3,7 +3,8 @@ import { Button } from "./ui/button"
 
 import { handleGameAction } from "../services/gameActions"
 import { getCurrentBatter } from "../state/gameLogic"
-import { resolveRunnerMovement } from "../scoring/runnerEngine"
+import { applyPlay } from "../scoring/playEngine"
+
 
 function getWalkRunnerDecisions(bases) {
   const decisions = {}
@@ -65,13 +66,16 @@ export function CountControls({ game, dispatch }) {
 
   async function handleBall() {
     const isBallFour = game.balls === 3
-
+  
     console.log("Ball selected:", {
       ballsBeforePlay: game.balls,
       isBallFour,
       bases: game.bases,
     })
 
+
+  
+    // Balls one through three still use the normal count action.
     if (!isBallFour) {
       await handleNormalCountEvent(
         "ball",
@@ -80,81 +84,123 @@ export function CountControls({ game, dispatch }) {
           type: "BALL",
         }
       )
-
+  
       return
     }
-
+  
     try {
       const batter = getCurrentBatter(game)
-
+  
       if (!batter) {
         throw new Error(
           "Could not identify the current batter."
         )
       }
-
+  
       const runnerDecisions =
         getWalkRunnerDecisions(game.bases)
-
-      const runnerResult =
-        resolveRunnerMovement({
-          bases: game.bases,
-          batter,
-          batterDestination: "first",
-          runnerDecisions,
-        })
-
-      const resolution = {
+  
+      /*
+       * Adapt the UI score shape to the engine score shape.
+       *
+       * UI:
+       * score[teamName]
+       *
+       * Engine:
+       * score.home / score.away
+       */
+      const engineGameState = {
+        ...game,
+  
+        score: {
+          home:
+            game.score?.[game.homeTeam] ?? 0,
+  
+          away:
+            game.score?.[game.awayTeam] ?? 0,
+        },
+  
+        bases: game.bases ?? {
+          first: null,
+          second: null,
+          third: null,
+        },
+  
+        inning: game.inning ?? 1,
+        half: game.half ?? "top",
+        outs: game.outs ?? 0,
+        version: game.version ?? 0,
+      }
+  
+      const playEvent = {
+        id: crypto.randomUUID(),
         playType: "walk",
-        batterId: batter.id,
-        batterDestination: "first",
+        batter,
         runnerDecisions,
-
-        bases: runnerResult.bases,
-        runnerAdvances:
-          runnerResult.runnerAdvances,
-
-        runs: runnerResult.runsScored,
-
-        // A run forced home by a walk is credited
-        // as an RBI to the batter.
-        rbi: runnerResult.runsScored,
-
-        outsRecorded:
-          runnerResult.outsRecorded,
-
-        details: {
-          playType: "walk",
-          batterDestination: "first",
-          runnerDecisions,
-          runnerAdvances:
-            runnerResult.runnerAdvances,
-          resultingBases: runnerResult.bases,
+  
+        metadata: {
+          resultType: "walk",
         },
       }
-
-      console.log(
-        "Walk resolution:",
-        resolution
+  
+      const result = applyPlay(
+        engineGameState,
+        playEvent
       )
-
+  
+      if (!result.ok) {
+        throw new Error(
+          result.errors?.[0]?.message ??
+            "Could not score the walk."
+        )
+      }
+  
+      console.log(
+        "Walk engine result:",
+        result
+      )
+  
       await handleGameAction({
         game,
         dispatch,
+  
         action: {
-          // Use your existing resolution reducer path.
-          type: "RESOLVE_PLAY",
-          resolution,
+          type: "APPLY_PLAY_RESULT",
+          result,
+          batterId: batter.id,
+  
+          pitcherId:
+            game.currentPitcher?.id ??
+            game.pitcher?.id ??
+            null,
         },
+  
         eventType: "walk",
         label: `Walk - ${batter.name}`,
+  
         extraEventData: {
           player_id: batter.id,
-          runs: resolution.runs,
-          rbi: resolution.rbi,
+  
+          runs:
+            result.metadata.runsScored,
+  
+          rbi:
+            result.metadata.rbiCount,
+  
           outs_recorded:
-            resolution.outsRecorded,
-          details: resolution.details,
+            result.metadata.outsRecorded,
+  
+          details: {
+            playId: playEvent.id,
+  
+            runnerDecisions,
+  
+            runnerAdvances:
+              result.metadata.runnerAdvances,
+  
+            resultingBases:
+              result.state.bases,
+          },
         },
       })
     } catch (error) {
@@ -162,10 +208,123 @@ export function CountControls({ game, dispatch }) {
         "Could not resolve walk:",
         error
       )
-
+  
       alert(
         error.message ||
           "Could not resolve walk"
+      )
+    }
+  }
+
+  async function handleStrike() {
+    const isStrikeThree = game.strikes === 2
+  
+    if (!isStrikeThree) {
+      await handleNormalCountEvent(
+        "strike",
+        "Strike",
+        {
+          type: "STRIKE",
+        }
+      )
+  
+      return
+    }
+  
+    try {
+      const batter = getCurrentBatter(game)
+  
+      if (!batter) {
+        throw new Error(
+          "Could not identify the current batter."
+        )
+      }
+  
+      const engineGameState = {
+        ...game,
+  
+        score: {
+          home:
+            game.score?.[game.homeTeam] ?? 0,
+  
+          away:
+            game.score?.[game.awayTeam] ?? 0,
+        },
+  
+        bases: game.bases ?? {
+          first: null,
+          second: null,
+          third: null,
+        },
+  
+        inning: game.inning ?? 1,
+        half: game.half ?? "top",
+        outs: game.outs ?? 0,
+        version: game.version ?? 0,
+      }
+  
+      const playEvent = {
+        id: crypto.randomUUID(),
+        playType: "strikeout",
+        batter,
+  
+        metadata: {
+          resultType: "strikeout",
+        },
+      }
+  
+      const result = applyPlay(
+        engineGameState,
+        playEvent
+      )
+  
+      if (!result.ok) {
+        throw new Error(
+          result.errors?.[0]?.message ??
+            "Could not score the strikeout."
+        )
+      }
+  
+      await handleGameAction({
+        game,
+        dispatch,
+  
+        action: {
+          type: "APPLY_PLAY_RESULT",
+          result,
+          batterId: batter.id,
+  
+          pitcherId:
+            game.currentPitcher?.id ??
+            game.pitcher?.id ??
+            null,
+        },
+  
+        eventType: "strikeout",
+        label: `Strikeout - ${batter.name}`,
+  
+        extraEventData: {
+          player_id: batter.id,
+          runs: 0,
+          rbi: 0,
+          outs_recorded:
+            result.metadata.outsRecorded,
+  
+          details: {
+            playId: playEvent.id,
+            playType: "strikeout",
+          },
+        },
+      })
+    } catch (error) {
+      console.error(
+        "Could not resolve strikeout:",
+        error
+      )
+  
+      alert(
+        error.message ||
+          "Could not resolve strikeout"
       )
     }
   }
@@ -188,23 +347,11 @@ export function CountControls({ game, dispatch }) {
             {walkLikely ? "Ball 4 / Walk" : "Ball"}
           </Button>
 
-          <Button
-            onClick={() =>
-              handleNormalCountEvent(
-                "strike",
-                strikeoutLikely
-                  ? "Strike Three"
-                  : "Strike",
-                {
-                  type: "STRIKE",
-                }
-              )
-            }
-          >
-            {strikeoutLikely
-              ? "Strike Three"
-              : "Strike"}
-          </Button>
+          <Button onClick={handleStrike}>
+  {strikeoutLikely
+    ? "Strike Three"
+    : "Strike"}
+</Button>
 
           <Button
             onClick={() =>

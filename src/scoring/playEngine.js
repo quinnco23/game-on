@@ -1,9 +1,14 @@
 import { createEngineResult } from "./createEngineResult";
 import { resolveRunnerMovement } from "./runnerEngine";
 import { getPlayDefinition } from "./playTypes";
+import { deriveBatterStats } from "./deriveBatterStats";
+import { derivePitcherStats } from "./derivePitcherStats";
+import { deriveFielderStats } from "./deriveFielderStats";
 
 export function applyPlay(gameState, playResult, context = {}) {
   if (!gameState) {
+   
+
     return createEngineResult({
       ok: false,
       state: gameState,
@@ -117,14 +122,18 @@ export function applyPlay(gameState, playResult, context = {}) {
   }
 
   const isRbiEligible =
-    playResult.playType === "groundOut";
+  playDefinition.metadata?.rbiEligible === true
 
-  const rbiCount =
-    isRbiEligible &&
-    runsScored > 0 &&
-    playResult.metadata?.doublePlay !== true
-      ? runsScored
-      : 0;
+const excludesRbi =
+  playResult.metadata?.doublePlay === true ||
+  playResult.metadata?.noRbi === true
+
+const rbiCount =
+  isRbiEligible &&
+  runsScored > 0 &&
+  !excludesRbi
+    ? runsScored
+    : 0
 
   nextState = {
     ...nextState,
@@ -146,32 +155,51 @@ export function applyPlay(gameState, playResult, context = {}) {
 
   events.push(...runnerAdvances);
 
+  const completedPlayMetadata = {
+    playId: playResult.id,
+    playType: playResult.playType,
+  
+    playDefinition: playDefinition.metadata ?? {},
+    event: playResult.metadata ?? {},
+  
+    previousVersion,
+    nextVersion: previousVersion + 1,
+  
+    runsScored,
+    outsRecorded,
+    runnerAdvances,
+  
+    thirdOutWasForce,
+    halfInningEnded,
+    runScoredAfterThirdOut,
+  
+    rbiCount,
+    isRbiPlay: rbiCount > 0,
+  };
+  
+  const batterStats = deriveBatterStats(
+    completedPlayMetadata,
+  );
+  
+  const pitcherStats = derivePitcherStats(
+    completedPlayMetadata,
+  );
+  
+  const fielderStats = deriveFielderStats(
+    completedPlayMetadata,
+  );
+  
   return createEngineResult({
     ok: true,
     state: nextState,
     events,
     warnings,
-
+  
     metadata: {
-      playId: playResult.id,
-      playType: playResult.playType,
-
-      playDefinition: playDefinition.metadata ?? {},
-      event: playResult.metadata ?? {},
-
-      previousVersion,
-      nextVersion: previousVersion + 1,
-
-      runsScored,
-      outsRecorded,
-      runnerAdvances,
-
-      thirdOutWasForce,
-      halfInningEnded,
-      runScoredAfterThirdOut,
-
-      rbiCount,
-      isRbiPlay: rbiCount > 0,
+      ...completedPlayMetadata,
+      batterStats,
+      pitcherStats,
+      fielderStats,
     },
   });
 }

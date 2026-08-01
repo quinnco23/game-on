@@ -21,11 +21,12 @@ function baseLabel(base) {
 }
 
 function defaultBatterDestination(playType) {
-  if (playType === "single") return "first"
-  if (playType === "double") return "second"
-  if (playType === "triple") return "third"
-  if (playType === "home_run") return "home"
-  return "first"
+  if (playType === "single") return "first";
+  if (playType === "double") return "second";
+  if (playType === "triple") return "third";
+  if (playType === "homeRun") return "home";
+
+  return "first";
 }
 
 export function PlayResolutionDialog({
@@ -131,7 +132,7 @@ export function PlayResolutionDialog({
             </p>
           </div>
 
-          <div className="rounded-2xl bg-slate-100 p-3">
+          <div className="rounded-2xl green-300 p-3">
             <div className="text-sm text-slate-500">Batter</div>
             <div className="font-bold">{formatPlayer(batter)}</div>
 
@@ -154,7 +155,7 @@ export function PlayResolutionDialog({
               <h3 className="font-bold">Runners</h3>
 
               {runnerAdvances.map((advance, index) => (
-                <div key={advance.runnerId} className="rounded-2xl bg-slate-100 p-3">
+                <div key={advance.runnerId} className="rounded-2xl green-300 p-3">
                   <div className="text-sm text-slate-500">
                     From {baseLabel(advance.from)}
                   </div>

@@ -5,7 +5,11 @@ import { BoxScore } from "./BoxScore"
 export function GameSummary({ game, onBackHome }) {
   const awayScore = game.score?.[game.awayTeam] ?? 0
   const homeScore = game.score?.[game.homeTeam] ?? 0
-
+  const {
+    homeTeam,
+    awayTeam,
+    score,
+  } = game;
   return (
     <main className="min-h-screen bg-green-950 text-white p-4">
       <div className="mx-auto max-w-md space-y-4">
@@ -40,16 +44,16 @@ export function GameSummary({ game, onBackHome }) {
         </Card>
 
         <BoxScore
-          title={game.awayTeam}
-          events={game.events}
-          lineup={game.lineups[game.awayTeam]}
-        />
+  title={homeTeam}
+  lineup={game.lineups?.[homeTeam] ?? []}
+  gameStats={game.stats}
+/>
 
-        <BoxScore
-          title={game.homeTeam}
-          events={game.events}
-          lineup={game.lineups[game.homeTeam]}
-        />
+<BoxScore
+  title={awayTeam}
+  lineup={game.lineups?.[awayTeam] ?? []}
+  gameStats={game.stats}
+/>
       </div>
     </main>
   )

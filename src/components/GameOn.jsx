@@ -24,6 +24,8 @@ import { handleGameAction } from "../services/gameActions"
 import { OutResultDialog } from "./OutResultDialog"
 import { BaseRunnersField } from "./BaseRunnersField"
 import { resolveRunnerMovement } from "@/scoring/runnerEngine"
+import { applyPlay } from "../scoring/playEngine";
+
 
 
 
@@ -85,6 +87,8 @@ export default function TapScorePrototype() {
   const [showVoiceConfirm, setShowVoiceConfirm] = useState(false)
   const [showAudioPrompt, setShowAudioPrompt] = useState(false)
   const [showOutResultDialog, setShowOutResultDialog] = useState(false)
+
+ 
 
   // useEffect(() => {
   //   const result = resolveRunnerMovement({
@@ -226,51 +230,198 @@ export default function TapScorePrototype() {
     onCancel={() => setPendingHitType(null)}
     onConfirm={async (resolution) => {
       try {
-        console.log("Resolution received:", resolution)
+        const batter = getCurrentBatter(game);
     
-        const runnerResult = resolveRunnerMovement({
-          bases: game.bases,
-          batter: getCurrentBatter(game),
-          batterDestination: resolution.batterDestination,
-          runnerDecisions: resolution.runnerDecisions,
-        })
-    
-        console.log("Runner Engine Result:", runnerResult)
-    
-        const resolvedPlay = {
-          ...resolution,
-          runnerAdvances: runnerResult.runnerAdvances,
-          bases: runnerResult.bases,
-          runs: runnerResult.runsScored,
-          outsRecorded: runnerResult.outsRecorded,
-          details: {
-            ...resolution.details,
-            runnerAdvances: runnerResult.runnerAdvances,
-            resultingBases: runnerResult.bases,
-          },
+        if (!batter) {
+          throw new Error("No current batter was found.");
         }
     
+        /*
+         * Adapt the existing UI state to the scoring-engine state.
+         *
+         * Your UI currently stores scores using team names:
+         * score[game.homeTeam]
+         *
+         * The engine currently expects:
+         * score.home / score.away
+         */
+        const engineGameState = {
+          ...game,
+    
+          score: {
+            home: game.score?.[game.homeTeam] ?? 0,
+            away: game.score?.[game.awayTeam] ?? 0,
+          },
+    
+          bases: game.bases ?? {
+            first: null,
+            second: null,
+            third: null,
+          },
+    
+          inning: game.inning ?? 1,
+          half: game.half ?? "top",
+          outs: game.outs ?? 0,
+          version: game.version ?? 0,
+        };
+    
+        const playEvent = {
+          id: crypto.randomUUID(),
+          playType: pendingHitType,
+          batter,
+    
+          runnerDecisions:
+            resolution.runnerDecisions ?? {},
+    
+          metadata: {
+            ...(resolution.details ?? {}),
+    
+            batterDestination:
+              resolution.batterDestination,
+    
+            notation:
+              resolution.notation,
+    
+            fielding:
+              resolution.fielding,
+    
+            doublePlay:
+              resolution.doublePlay === true,
+    
+            triplePlay:
+              resolution.triplePlay === true,
+          },
+        };
+    
+        const result = applyPlay(
+          engineGameState,
+          playEvent,
+          {
+            thirdOut: resolution.thirdOut,
+          },
+        );
+
+        console.log("Ground-out batter stats:", {
+          batterId: batter.id,
+          playDefinition: result.metadata.playDefinition,
+          batterStats: result.metadata.batterStats,
+        })
+    
+        if (!result.ok) {
+          console.error(
+            "Play engine rejected the play:",
+            result.errors,
+          );
+    
+          throw new Error(
+            result.errors?.[0]?.message ??
+              "The play could not be scored.",
+          );
+        }
+    
+        console.log("Completed play result:", result);
+    
+        // await handleGameAction({
+        //   game,
+        //   dispatch,
+    
+        //   action: {
+        //     type: "APPLY_PLAY_RESULT",
+    
+        //     result,
+    
+        //     batterId: batter.id,
+    
+        //     /*
+        //      * This may remain undefined until the current
+        //      * defensive pitcher is stored in game state.
+        //      */
+        //     pitcherId:
+        //       game.currentPitcher?.id ??
+        //       game.pitcher?.id ??
+        //       null,
+        //   },
+    
+        //   eventType: pendingHitType,
+    
+        //   label: `${pendingHitType} - ${batter.name}`,
+    
+        //   // extraEventData: {
+        //   //   play_id: playEvent.id,
+        //   //   player_id: batter.id,
+    
+        //   //   runs:
+        //   //     result.metadata.runsScored,
+    
+        //   //   rbi:
+        //   //     result.metadata.rbiCount,
+    
+        //   //   outs_recorded:
+        //   //     result.metadata.outsRecorded,
+    
+        //   //   runner_advances:
+        //   //     result.metadata.runnerAdvances,
+    
+        //   //    batter_stats:
+        //   //      result.metadata.batterStats,
+    
+        //   //    pitcher_stats:
+        //   //      result.metadata.pitcherStats,
+    
+        //   //    fielder_stats:
+        //   //      result.metadata.fielderStats,
+    
+        //   //   details:
+        //   //     result.metadata.event,
+        //   // },
+
+        //   extraEventData: {
+        //     runs: result.metadata.runsScored,
+        //     rbi: result.metadata.rbiCount,
+        //     outs_recorded: result.metadata.outsRecorded,
+          
+        //     details: {
+        //       ...result.metadata.event,
+        //       playId: playEvent.id,
+        //       runnerAdvances:
+        //         result.metadata.runnerAdvances,
+        //     },
+        //   },
+        // });
+    
+
         await handleGameAction({
           game,
           dispatch,
+        
           action: {
-            type: "RESOLVE_PLAY",
-            resolution: resolvedPlay,
+            type: "APPLY_PLAY_RESULT",
+            result,
+            batterId: batter.id,
+            pitcherId:
+              game.currentPitcher?.id ??
+              game.pitcher?.id ??
+              null,
           },
-          eventType: resolvedPlay.playType,
-          label: `${resolvedPlay.playType} - ${getCurrentBatter(game).name}`,
-          extraEventData: {
-            runs: resolvedPlay.runs,
-            rbi: resolvedPlay.rbi,
-            outs_recorded: resolvedPlay.outsRecorded,
-            details: resolvedPlay.details,
-          },
-        })
-    
-        setPendingHitType(null)
+        
+          eventType: pendingHitType,
+          label: `${pendingHitType} - ${batter.name}`,
+        });
+        
+        setPendingHitType(null);
+        
+        setPendingHitType(null);
+        setPendingHitType(null);
       } catch (error) {
-        console.error("Could not resolve play:", error)
-        alert(error.message || "Could not resolve play")
+        console.error(
+          "Could not resolve play:",
+          error,
+        );
+    
+        alert(
+          error.message ||
+            "Could not resolve play",
+        );
       }
     }}
   />
@@ -279,27 +430,216 @@ export default function TapScorePrototype() {
 {showOutResultDialog && (
   <OutResultDialog
     onCancel={() => setShowOutResultDialog(false)}
-    onConfirm={async ({ eventType, label, action, details, outsRecorded }) => {
+    onConfirm={async ({
+      eventType,
+      label,
+      action,
+      details,
+      outsRecorded,
+    }) => {
       try {
+        /*
+         * Migrate ground outs through the new engine.
+         * Other out types temporarily keep using the old path.
+         */
+        if (
+          eventType === "groundout" ||
+          eventType === "flyout"
+        ) {
+          const batter = getCurrentBatter(game)
+        
+          if (!batter) {
+            throw new Error(
+              "Could not identify the current batter."
+            )
+          }
+        
+          const enginePlayType =
+            eventType === "groundout"
+              ? "groundOut"
+              : "flyOut"
+        
+          const engineGameState = {
+            ...game,
+        
+            score: {
+              home:
+                game.score?.[game.homeTeam] ?? 0,
+        
+              away:
+                game.score?.[game.awayTeam] ?? 0,
+            },
+        
+            bases: game.bases ?? {
+              first: null,
+              second: null,
+              third: null,
+            },
+        
+            inning: game.inning ?? 1,
+            half: game.half ?? "top",
+            outs: game.outs ?? 0,
+            version: game.version ?? 0,
+          }
+        
+          const fieldedBy =
+            details.fieldedByPosition
+        
+          const putoutPosition =
+            details.putoutPosition
+        
+          let fielding
+        
+          if (eventType === "groundout") {
+            fielding = {
+              putouts:
+                putoutPosition
+                  ? [putoutPosition]
+                  : [],
+        
+              assists:
+                fieldedBy &&
+                putoutPosition &&
+                fieldedBy !== putoutPosition
+                  ? [fieldedBy]
+                  : [],
+        
+              errors: [],
+            }
+          } else {
+            /*
+             * A routine flyout credits the catching fielder
+             * with the putout and no assist.
+             */
+            fielding = {
+              putouts:
+                fieldedBy
+                  ? [fieldedBy]
+                  : [],
+        
+              assists: [],
+              errors: [],
+            }
+          }
+        
+          const playEvent = {
+            id: crypto.randomUUID(),
+            playType: enginePlayType,
+            batter,
+        
+            /*
+             * Existing runners hold for this first version.
+             * Tag-up choices come next.
+             */
+            runnerDecisions: {},
+        
+            metadata: {
+              ...details,
+        
+              notation: details.notation,
+        
+              fielding,
+        
+              sacrifice:
+                details.sacrifice === true,
+        
+              doublePlay: false,
+              triplePlay: false,
+            },
+          }
+        
+          const result = applyPlay(
+            engineGameState,
+            playEvent
+          )
+        
+          if (!result.ok) {
+            throw new Error(
+              result.errors?.[0]?.message ??
+                `Could not score the ${enginePlayType}.`
+            )
+          }
+        
+          await handleGameAction({
+            game,
+            dispatch,
+        
+            action: {
+              type: "APPLY_PLAY_RESULT",
+              result,
+              batterId: batter.id,
+        
+              pitcherId:
+                game.currentPitcher?.id ??
+                game.pitcher?.id ??
+                null,
+            },
+        
+            eventType: enginePlayType,
+            label,
+        
+            extraEventData: {
+              player_id: batter.id,
+        
+              outs_recorded:
+                result.metadata.outsRecorded,
+        
+              runs:
+                result.metadata.runsScored,
+        
+              rbi:
+                result.metadata.rbiCount,
+        
+              details: {
+                ...details,
+        
+                playId: playEvent.id,
+        
+                runnerAdvances:
+                  result.metadata.runnerAdvances,
+        
+                fielding,
+              },
+            },
+          })
+        
+          setShowOutResultDialog(false)
+          return
+        }
+    
+        /*
+         * Temporary legacy path for flyouts, lineouts,
+         * popouts, errors, and fielder's choices.
+         */
         await handleGameAction({
           game,
           dispatch,
+    
           action: {
             ...action,
             details,
           },
+    
           eventType,
           label,
+    
           extraEventData: {
             outs_recorded: outsRecorded,
             details,
           },
         })
-
+    
         setShowOutResultDialog(false)
       } catch (error) {
-        console.error("Could not save result:", error)
-        alert(error.message || "Could not save result")
+        console.error(
+          "Could not save result:",
+          error
+        )
+    
+        alert(
+          error.message ||
+            "Could not save result"
+        )
       }
     }}
   />
@@ -308,16 +648,16 @@ export default function TapScorePrototype() {
         <EventFeed events={game.events} />
 
         <BoxScore
-          title={game.awayTeam}
-          events={game.events}
-          lineup={game.lineups[game.awayTeam]}
-        />
+  title={game.awayTeam}
+  lineup={game.lineups?.[game.awayTeam] ?? []}
+  gameStats={game.stats}
+/>
 
-        <BoxScore
-          title={game.homeTeam}
-          events={game.events}
-          lineup={game.lineups[game.homeTeam]}
-        />
+<BoxScore
+  title={game.homeTeam}
+  lineup={game.lineups?.[game.homeTeam] ?? []}
+  gameStats={game.stats}
+/>
 
 <Button
   className="w-full rounded-2xl"

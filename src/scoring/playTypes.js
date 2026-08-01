@@ -1,126 +1,136 @@
-export const PLAY_TYPES = {
+export const playTypes = {
     single: {
       batterDestination: "first",
+  
       metadata: {
         category: "hit",
-        battedBallType: null,
-        hitValue: 1,
+        resultType: "single",
+        isAtBat: true,
+        isHit: true,
+        rbiEligible: true,
       },
     },
   
     double: {
       batterDestination: "second",
+  
       metadata: {
         category: "hit",
-        battedBallType: null,
-        hitValue: 2,
+        resultType: "double",
+        isAtBat: true,
+        isHit: true,
+        rbiEligible: true,
       },
     },
   
     triple: {
       batterDestination: "third",
+  
       metadata: {
         category: "hit",
-        battedBallType: null,
-        hitValue: 3,
+        resultType: "triple",
+        isAtBat: true,
+        isHit: true,
+        rbiEligible: true,
       },
     },
   
     homeRun: {
       batterDestination: "home",
+  
       metadata: {
         category: "hit",
-        battedBallType: "flyBall",
-        hitValue: 4,
+        resultType: "homeRun",
+        isAtBat: true,
+        isHit: true,
+        rbiEligible: true,
       },
     },
   
     walk: {
       batterDestination: "first",
+  
       metadata: {
         category: "plateAppearance",
+        resultType: "walk",
         isAtBat: false,
+        isHit: false,
+        rbiEligible: true,
       },
     },
   
     strikeout: {
       batterDestination: "out",
       holdExistingRunners: true,
+  
       metadata: {
         category: "out",
+        resultType: "strikeout",
         outType: "strikeout",
         isAtBat: true,
-      },
-    },
-  
-    flyOut: {
-      batterDestination: "out",
-      holdExistingRunners: true,
-      metadata: {
-        category: "out",
-        outType: "flyOut",
-        battedBallType: "flyBall",
-        isAtBat: true,
+        isHit: false,
+        rbiEligible: false,
       },
     },
   
     groundOut: {
       batterDestination: "out",
       holdExistingRunners: true,
+  
       metadata: {
         category: "out",
+        resultType: "groundOut",
         outType: "groundOut",
         battedBallType: "groundBall",
         isAtBat: true,
+        isHit: false,
+        rbiEligible: true,
+      },
+    },
+  
+    flyOut: {
+      batterDestination: "out",
+      holdExistingRunners: true,
+  
+      metadata: {
+        category: "out",
+        resultType: "flyOut",
+        outType: "flyOut",
+        battedBallType: "flyBall",
+        isAtBat: true,
+        isHit: false,
+        rbiEligible: false,
+      },
+    },
+  
+    fielderChoice: {
+      batterDestination: "first",
+  
+      metadata: {
+        category: "out",
+        resultType: "fielderChoice",
+        isAtBat: true,
+        isHit: false,
+        rbiEligible: false,
+      },
+    },
+  
+    reachedOnError: {
+      batterDestination: "first",
+  
+      metadata: {
+        category: "error",
+        resultType: "reachedOnError",
+        isAtBat: true,
+        isError: true,
+        isHit: false,
+        rbiEligible: false,
       },
     },
 
-    fielderChoice: {
-        batterDestination: "first",
-        holdExistingRunners: true,
-      
-        metadata: {
-          category: "ballInPlay",
-          resultType: "fielderChoice",
-          battedBallType: "groundBall",
-          isAtBat: true,
-          isHit: false,
-        },
-      },
-
-      reachedOnError: {
-        batterDestination: "first",
-        holdExistingRunners: true,
-      
-        metadata: {
-          category: "ballInPlay",
-          resultType: "reachedOnError",
-          battedBallType: "groundBall",
-          isAtBat: true,
-          isHit: false,
-          isError: true,
-        },
-      },
-
-      groundOut: {
-        batterDestination: "out",
-        holdExistingRunners: true,
-      
-        metadata: {
-          category: "out",
-          resultType: "groundOut",
-          outType: "groundOut",
-          battedBallType: "groundBall",
-          isAtBat: true,
-          isHit: false,
-          rbiEligible: true,
-        },
-      },
-      
+    
   };
 
-  
-  
   export function getPlayDefinition(playType) {
-    return PLAY_TYPES[playType] ?? null;
+    return playTypes[playType];
   }
