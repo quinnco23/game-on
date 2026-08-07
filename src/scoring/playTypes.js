@@ -117,19 +117,116 @@ export const playTypes = {
   
     reachedOnError: {
       batterDestination: "first",
-  
+    
       metadata: {
-        category: "error",
+        category: "plateAppearance",
         resultType: "reachedOnError",
+    
+        isPlateAppearance: true,
+        endsPlateAppearance: true,
         isAtBat: true,
+        isHit: false,
+    
         isError: true,
+        rbiEligible: false,
+      },
+    },
+
+    stolenBase: {
+      batterDestination: null,
+      holdExistingRunners: true,
+    
+      metadata: {
+        category: "runnerEvent",
+        resultType: "stolenBase",
+    
+        isPlateAppearance: false,
+        endsPlateAppearance: false,
+    
+        isAtBat: false,
+        isHit: false,
+        rbiEligible: false,
+      },
+    },
+
+    passedBall: {
+      batterDestination: null,
+      holdExistingRunners: true,
+    
+      metadata: {
+        category: "runnerEvent",
+        resultType: "passedBall",
+        isPlateAppearance: false,
+        endsPlateAppearance: false,
+        isAtBat: false,
+        isHit: false,
+        rbiEligible: false,
+      },
+    },
+    wildPitch: {
+      batterDestination: null,
+      holdExistingRunners: true,
+    
+      metadata: {
+        category: "runnerEvent",
+        resultType: "wildPitch",
+        isPlateAppearance: false,
+        endsPlateAppearance: false,
+        isAtBat: false,
+        isHit: false,
+        rbiEligible: false,
+      },
+    },
+
+    hitByPitch: {
+      batterDestination: "first",
+    
+      metadata: {
+        category: "plateAppearance",
+        resultType: "hitByPitch",
+        isPlateAppearance: true,
+        endsPlateAppearance: true,
+        isAtBat: false,
+        isHit: false,
+        rbiEligible: true,
+      },
+    },
+
+    caughtStealing: {
+      batterDestination: null,
+      holdExistingRunners: true,
+    
+      metadata: {
+        category: "runnerEvent",
+        resultType: "caughtStealing",
+        isPlateAppearance: false,
+        endsPlateAppearance: false,
+        isAtBat: false,
+        isHit: false,
+        rbiEligible: false,
+      },
+    },
+
+    fielderChoice: {
+      batterDestination: "first",
+    
+      metadata: {
+        category: "plateAppearance",
+        resultType: "fielderChoice",
+        isPlateAppearance: true,
+        endsPlateAppearance: true,
+        isAtBat: true,
         isHit: false,
         rbiEligible: false,
       },
     },
 
     
+    
   };
+
+  
+  
 
   export function getPlayDefinition(playType) {
     return playTypes[playType];

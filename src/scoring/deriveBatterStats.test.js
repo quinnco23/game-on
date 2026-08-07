@@ -146,5 +146,86 @@ describe("deriveBatterStats", () => {
     });
   });
 
+
+  it("credits a hit by pitch without an at-bat", () => {
+    const stats = deriveBatterStats({
+      playType: "hitByPitch",
   
+      playDefinition: {
+        isPlateAppearance: true,
+        endsPlateAppearance: true,
+        isAtBat: false,
+        isHit: false,
+      },
+  
+      event: {},
+      runsScored: 0,
+      rbiCount: 0,
+    });
+  
+    expect(stats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 0,
+      hits: 0,
+      walks: 0,
+      hitByPitch: 1,
+    });
+  });
+
+  it("credits a sacrifice fly without an at-bat", () => {
+    const stats = deriveBatterStats({
+      playType: "flyOut",
+  
+      playDefinition: {
+        isPlateAppearance: true,
+        endsPlateAppearance: true,
+        isAtBat: true,
+        isHit: false,
+      },
+  
+      event: {
+        sacrificeFly: true,
+      },
+  
+      runsScored: 1,
+      rbiCount: 1,
+    })
+  
+    expect(stats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 0,
+      hits: 0,
+      sacrificeFlies: 1,
+      rbi: 1,
+    })
+  })
+  
+  it("credits a sacrifice bunt without an at-bat", () => {
+    const stats = deriveBatterStats({
+      playType: "groundOut",
+  
+      playDefinition: {
+        isPlateAppearance: true,
+        endsPlateAppearance: true,
+        isAtBat: true,
+        isHit: false,
+      },
+  
+      event: {
+        sacrificeBunt: true,
+      },
+  
+      runsScored: 0,
+      rbiCount: 0,
+    })
+  
+    expect(stats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 0,
+      hits: 0,
+      sacrificeHits: 1,
+      rbi: 0,
+    })
+  })
+
 });

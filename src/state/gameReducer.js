@@ -15,7 +15,6 @@ import {
 
 
 export function gameReducer(state, action) {
-  
   switch (action.type) {
     case "START_GAME": {
       
@@ -24,6 +23,7 @@ export function gameReducer(state, action) {
       return {
         ...state,
   id: action.gameId,
+  history: [],
   status: "scoring",
   homeTeam,
   awayTeam,
@@ -92,131 +92,161 @@ export function gameReducer(state, action) {
       return advanceRunner(state, action.from, action.to);
 
       case "APPLY_PLAY_RESULT": {
-  const {
-    result,
-    batterId,
-    pitcherId,
-  } = action;
+        const {
+          result,
+          batterId,
+          pitcherId,
+        } = action;
+      
+        if (!result?.ok) {
+          return state;
+        }
+      
+        const endsPlateAppearance =
+          result.metadata?.playDefinition
+            ?.endsPlateAppearance !== false;
+      
+        const stats = accumulateGameStats(
+          state.stats,
+          {
+            batterId,
+            pitcherId,
+      
+            batterStats:
+              result.metadata?.batterStats,
+      
+            pitcherStats:
+              result.metadata?.pitcherStats,
+      
+            fielderStats:
+              result.metadata?.fielderStats ?? [],
+      
+            runnerStats:
+              result.metadata?.runnerStats ?? [],
+          },
+        );
+      
+        const battingTeam =
+          state.half === "top"
+            ? state.awayTeam
+            : state.homeTeam;
+      
+        const battingLineup =
+          state.lineups?.[battingTeam] ?? [];
+      
+        const currentBattingIndex =
+          state.battingIndex?.[battingTeam] ?? 0;
+      
+        const nextBattingIndex =
+          endsPlateAppearance &&
+          battingLineup.length > 0
+            ? (currentBattingIndex + 1) %
+              battingLineup.length
+            : currentBattingIndex;
+      
+        const feedEvent = {
+          id:
+            result.metadata?.playId ??
+            crypto.randomUUID(),
+      
+          inning: state.inning,
+          half: state.half,
+          team: battingTeam,
+      
+          event_type:
+            result.metadata?.playType ??
+            "play",
+      
+          label:
+            action.label ??
+            `${result.metadata?.playType ?? "Play"}`,
+      
+          player_id: batterId ?? null,
+      
+          runs:
+            result.metadata?.runsScored ?? 0,
+      
+          rbi:
+            result.metadata?.rbiCount ?? 0,
+      
+          outs_recorded:
+            result.metadata?.outsRecorded ?? 0,
+      
+          details:
+            result.metadata?.event ?? {},
+        };
+      
+        const {
+          history: _previousHistory,
+          ...stateWithoutHistory
+        } = state;
+      
+        const historyEntry =
+          structuredClone(stateWithoutHistory);
+      
+        return {
+          ...state,
+      
+          history: [
+            ...(state.history ?? []),
+            historyEntry,
+          ],
+      
+          bases: result.state.bases,
+      
+          score: {
+            ...state.score,
+      
+            [state.homeTeam]:
+              result.state.score.home,
+      
+            [state.awayTeam]:
+              result.state.score.away,
+          },
+      
+          outs: result.state.outs,
+          half: result.state.half,
+          inning: result.state.inning,
+          version: result.state.version,
+      
+          balls:
+            endsPlateAppearance
+              ? 0
+              : state.balls,
+      
+          strikes:
+            endsPlateAppearance
+              ? 0
+              : state.strikes,
+      
+          battingIndex: {
+            ...state.battingIndex,
+            [battingTeam]:
+              nextBattingIndex,
+          },
+      
+          events: [
+            ...(state.events ?? []),
+            feedEvent,
+          ],
+      
+          stats,
+        };
+      }
+case "UNDO": {
+  const history = state.history ?? [];
 
-  if (!result?.ok) {
+  if (history.length === 0) {
     return state;
   }
 
-  const stats = accumulateGameStats(
-    state.stats,
-    {
-      batterId,
-      pitcherId,
-
-      batterStats:
-        result.metadata?.batterStats,
-
-      pitcherStats:
-        result.metadata?.pitcherStats,
-
-      fielderStats:
-        result.metadata?.fielderStats ?? [],
-    },
-  );
-
-  /*
-   * Determine who was batting before the play changed
-   * the inning or half-inning.
-   */
-  const battingTeam =
-  state.half === "top"
-    ? state.awayTeam
-    : state.homeTeam
-
-    const battingLineup =
-  state.lineups?.[battingTeam] ?? []
-
-const currentBattingIndex =
-  state.battingIndex?.[battingTeam] ?? 0
-
-const nextBattingIndex =
-  battingLineup.length > 0
-    ? (currentBattingIndex + 1) % battingLineup.length
-    : currentBattingIndex
-
-const feedEvent = {
-  id:
-    result.metadata?.playId ??
-    crypto.randomUUID(),
-
-  inning: state.inning,
-  half: state.half,
-  team: battingTeam,
-
-  event_type:
-    result.metadata?.playType ??
-    "play",
-
-  label:
-    action.label ??
-    `${result.metadata?.playType ?? "Play"}`,
-
-  player_id: batterId ?? null,
-
-  runs:
-    result.metadata?.runsScored ?? 0,
-
-  rbi:
-    result.metadata?.rbiCount ?? 0,
-
-  outs_recorded:
-    result.metadata?.outsRecorded ?? 0,
-
-  details:
-    result.metadata?.event ?? {},
-}
-
-      
+  const previous = history[history.length - 1];
 
   return {
-    ...state,
-
-    bases: result.state.bases,
-
-    score: {
-      ...state.score,
-
-      [state.homeTeam]:
-        result.state.score.home,
-
-      [state.awayTeam]:
-        result.state.score.away,
-    },
-
-    outs: result.state.outs,
-    half: result.state.half,
-    inning: result.state.inning,
-    version: result.state.version,
-
-    /*
-     * A completed plate appearance resets the count.
-     */
-    balls: 0,
-    strikes: 0,
-
-    battingIndex: {
-      ...state.battingIndex,
-
-      [battingTeam]:
-        nextBattingIndex,
-    },
-
-    events: [
-      ...(state.events ?? []),
-      feedEvent,
-    ],
-
-    stats,
+    ...previous,
+    history: history.slice(0, -1),
   };
 }
-    case "UNDO":
-      // V1 placeholder: real undo should keep a history stack.
-      return logEvent(state, "Undo requested");
 
     case "END_GAME":
       return { ...state, status: "summary" };

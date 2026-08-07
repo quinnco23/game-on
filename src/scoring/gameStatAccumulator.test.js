@@ -285,4 +285,22 @@ describe("gameStatAccumulator", () => {
       fielders: {},
     });
   });
+
+  it("credits a run to the scoring runner", () => {
+    const result = accumulateGameStats(
+      createEmptyGameStats(),
+      {
+        runnerStats: [
+          {
+            runnerId: "runner-1",
+            runs: 1,
+          },
+        ],
+      },
+    );
+  
+    expect(
+      result.batters["runner-1"].runs
+    ).toBe(1);
+  });
 });

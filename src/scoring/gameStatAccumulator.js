@@ -21,7 +21,6 @@ function addStatDelta(current = {}, delta = {}) {
       fielders: {},
     };
   }
-  
   export function accumulateGameStats(
     currentStats,
     {
@@ -30,6 +29,7 @@ function addStatDelta(current = {}, delta = {}) {
       batterStats,
       pitcherStats,
       fielderStats = [],
+      runnerStats = [],
     } = {},
   ) {
     const existingStats =
@@ -55,6 +55,19 @@ function addStatDelta(current = {}, delta = {}) {
         batterStats,
       );
     }
+
+    for (const runnerStat of runnerStats) {
+      const runnerId = runnerStat?.runnerId;
+    
+      if (!runnerId) {
+        continue;
+      }
+    
+      nextStats.batters[runnerId] = addStatDelta(
+        nextStats.batters[runnerId],
+        runnerStat,
+      );
+    }
   
     if (pitcherId && pitcherStats) {
       nextStats.pitchers[pitcherId] = addStatDelta(
@@ -74,6 +87,19 @@ function addStatDelta(current = {}, delta = {}) {
         nextStats.fielders[fielderId],
         fielderStat,
       );
+
+      for (const runnerStat of runnerStats) {
+        const runnerId = runnerStat?.runnerId;
+      
+        if (!runnerId) {
+          continue;
+        }
+      
+        nextStats.batters[runnerId] = addStatDelta(
+          nextStats.batters[runnerId],
+          runnerStat,
+        );
+      }
     }
   
     return nextStats;

@@ -122,92 +122,147 @@ export function PlayResolutionDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center">
-      <Card className="w-full max-w-md rounded-3xl bg-green-950 text-slate-950">
-        <CardContent className="p-5 space-y-5">
-          <div>
-            <h2 className="text-xl font-bold">Resolve {playType}</h2>
-            <p className="text-sm text-slate-500">
-              Confirm runner movement and RBI.
-            </p>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-4">
+  <Card className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-t-3xl bg-green-950 text-slate-950 sm:rounded-3xl">
+    <CardContent className="flex max-h-[calc(100dvh-1.5rem)] flex-col p-0">
+      <div className="flex-1 overflow-y-auto p-5 pb-8 space-y-5">
+        <div>
+          <h2 className="text-xl font-bold">
+            Resolve {playType}
+          </h2>
+
+          <p className="text-sm text-slate-500">
+            Confirm runner movement and RBI.
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-green-300 p-3">
+          <div className="text-sm text-slate-500">
+            Batter
           </div>
 
-          <div className="rounded-2xl green-300 p-3">
-            <div className="text-sm text-slate-500">Batter</div>
-            <div className="font-bold">{formatPlayer(batter)}</div>
+          <div className="font-bold">
+            {formatPlayer(batter)}
+          </div>
 
-            <div className="grid grid-cols-4 gap-2 mt-3">
-              {["first", "second", "third", "home", "out"].map((option) => (
-                <Button
-                  key={option}
-                  variant={batterDestination === option ? "default" : "secondary"}
-                  className="rounded-xl"
-                  onClick={() => setBatterDestination(option)}
+          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {[
+              "first",
+              "second",
+              "third",
+              "home",
+              "out",
+            ].map((option) => (
+              <Button
+                key={option}
+                variant={
+                  batterDestination === option
+                    ? "default"
+                    : "secondary"
+                }
+                className="rounded-xl"
+                onClick={() =>
+                  setBatterDestination(option)
+                }
+              >
+                {baseLabel(option)}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {runnerAdvances.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="font-bold">
+              Runners
+            </h3>
+
+            {runnerAdvances.map(
+              (advance, index) => (
+                <div
+                  key={advance.runnerId}
+                  className="rounded-2xl bg-green-300 p-3"
                 >
-                  {baseLabel(option)}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {runnerAdvances.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="font-bold">Runners</h3>
-
-              {runnerAdvances.map((advance, index) => (
-                <div key={advance.runnerId} className="rounded-2xl green-300 p-3">
                   <div className="text-sm text-slate-500">
                     From {baseLabel(advance.from)}
                   </div>
-                  <div className="font-bold">{formatPlayer(advance.runner)}</div>
 
-                  <div className="grid grid-cols-3 gap-2 mt-3">
+                  <div className="font-bold">
+                    {formatPlayer(advance.runner)}
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-3 gap-2">
                     {baseOptions.map((option) => (
                       <Button
                         key={option}
-                        variant={advance.to === option ? "default" : "secondary"}
+                        variant={
+                          advance.to === option
+                            ? "default"
+                            : "secondary"
+                        }
                         className="rounded-xl"
-                        onClick={() => updateRunner(index, option)}
+                        onClick={() =>
+                          updateRunner(index, option)
+                        }
                       >
                         {baseLabel(option)}
                       </Button>
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              ),
+            )}
+          </div>
+        )}
 
-          <div className="rounded-2xl bg-slate-100 p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold">Runs scored</span>
-              <span>{runsScored}</span>
-            </div>
+        <div className="space-y-2 rounded-2xl bg-slate-100 p-3">
+          <div className="flex items-center justify-between">
+            <span className="font-bold">
+              Runs scored
+            </span>
 
-            <label className="flex items-center justify-between gap-3">
-              <span className="font-bold">RBI credited</span>
-              <input
-                type="number"
-                min="0"
-                max="4"
-                className="w-20 rounded-xl border p-2 text-center"
-                value={rbi}
-                onChange={(e) => setRbi(Number(e.target.value))}
-              />
-            </label>
+            <span>{runsScored}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="secondary" className="rounded-2xl" onClick={onCancel}>
-              Cancel
-            </Button>
+          <label className="flex items-center justify-between gap-3">
+            <span className="font-bold">
+              RBI credited
+            </span>
 
-            <Button className="rounded-2xl" onClick={submit}>
-              Confirm Play
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+            <input
+              type="number"
+              min="0"
+              max="4"
+              className="w-20 rounded-xl border p-2 text-center"
+              value={rbi}
+              onChange={(event) =>
+                setRbi(Number(event.target.value))
+              }
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="z-20 border-t border-slate-200 bg-white/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur">
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            variant="secondary"
+            className="rounded-2xl"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            className="rounded-2xl"
+            onClick={submit}
+          >
+            Confirm Play
+          </Button>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</div>
   )
 }

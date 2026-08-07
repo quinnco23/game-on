@@ -42,6 +42,7 @@ export function BoxScore({
       ROE: stats.reachedOnError ?? 0,
       FC: stats.fieldersChoices ?? 0,
       GIDP: stats.groundedIntoDoublePlay ?? 0,
+      HBP: stats.hitByPitch ?? 0,
 
       AVG: formatAverage(hits, atBats),
     };
@@ -69,6 +70,7 @@ export function BoxScore({
                 <th className="text-center">BB</th>
                 <th className="text-center">SO</th>
                 <th className="text-center">AVG</th>
+                
               </tr>
             </thead>
 

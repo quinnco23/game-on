@@ -4,6 +4,7 @@ import { getPlayDefinition } from "./playTypes";
 import { deriveBatterStats } from "./deriveBatterStats";
 import { derivePitcherStats } from "./derivePitcherStats";
 import { deriveFielderStats } from "./deriveFielderStats";
+import { deriveRunnerStats } from "./deriveRunnerStats";
 
 export function applyPlay(gameState, playResult, context = {}) {
   if (!gameState) {
@@ -121,8 +122,13 @@ export function applyPlay(gameState, playResult, context = {}) {
     nextScore.home += runsScored;
   }
 
-  const isRbiEligible =
-  playDefinition.metadata?.rbiEligible === true
+  const isSacrificeFly =
+  playResult.playType === "flyOut" &&
+  playResult.metadata?.sacrificeFly === true
+
+const isRbiEligible =
+  playDefinition.metadata?.rbiEligible === true ||
+  isSacrificeFly
 
 const excludesRbi =
   playResult.metadata?.doublePlay === true ||
@@ -177,17 +183,17 @@ const rbiCount =
     isRbiPlay: rbiCount > 0,
   };
   
-  const batterStats = deriveBatterStats(
-    completedPlayMetadata,
-  );
-  
-  const pitcherStats = derivePitcherStats(
-    completedPlayMetadata,
-  );
-  
-  const fielderStats = deriveFielderStats(
-    completedPlayMetadata,
-  );
+  const batterStats =
+  deriveBatterStats(completedPlayMetadata);
+
+const pitcherStats =
+  derivePitcherStats(completedPlayMetadata);
+
+const fielderStats =
+  deriveFielderStats(completedPlayMetadata);
+
+const runnerStats =
+  deriveRunnerStats(completedPlayMetadata);
   
   return createEngineResult({
     ok: true,
@@ -200,6 +206,7 @@ const rbiCount =
       batterStats,
       pitcherStats,
       fielderStats,
+      runnerStats,
     },
   });
 }

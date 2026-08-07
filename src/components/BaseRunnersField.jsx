@@ -22,10 +22,39 @@ function FieldBase({
   )
 }
 
+
+
+function Base({ occupied, runner,  className = "", }) {
+  return (
+    <div className={`absolute h-10 w-24 ${className}`}>
+    <div className= {`absolute left-1/2 top-2.5 h-3 w-3 -translate-x-1/2 rotate-45 rounded-md border-2 border-amber-200 bg-white shadow-[0_3px_8px_rgba(0,0,0,0.35)] ${
+    occupied
+      ? "bg-yellow-400 border-yellow-200"
+      : "bg-white border-slate-200"
+  }`}/>
+
+    {runner && (
+      <div className="absolute left-1/2 bottom-8 z-10 -translate-x-1/2 whitespace-nowrap text-center text-white drop-shadow-md">
+        <div className="text-[8px] font-black">
+          #{runner.number}
+        </div>
+        <div className="text-[8px] font-medium">
+          {runner.name}
+        </div>
+      </div>
+    )}
+  </div>
+  )
+}
+
 export function BaseRunnersField({
   bases,
+  occupied,
   title = "Base Runners",
-}) {
+}) 
+
+
+{
   return (
     <Card className="ballpark-card">
       <CardContent className="relative z-10 p-4 sm:p-5">
@@ -52,7 +81,7 @@ export function BaseRunnersField({
               >
                 <stop offset="0%" stopColor="#173f2d" />
                 <stop offset="100%" stopColor="#0d281d" />
-              </linearGradient> 
+              </linearGradient> F
 
                <radialGradient
                 id="fieldGrass"
@@ -508,8 +537,9 @@ export function BaseRunnersField({
           </svg>
 
           {/* Interactive bases */}
-          <FieldBase
-            occupied={bases.second}
+          <Base
+             occupied={!!bases.second}
+             runner={bases.second}
             label="2B"
             className="
               left-1/2 top-[50.5%]
@@ -517,8 +547,9 @@ export function BaseRunnersField({
             "
           />
 
-          <FieldBase
-            occupied={bases.third}
+          <Base
+            occupied={!!bases.third}
+            runner={bases.third}
             label="3B"
             className="
               left-[37.5%] top-[68%]
@@ -526,8 +557,9 @@ export function BaseRunnersField({
             "
           />
 
-          <FieldBase
-            occupied={bases.first}
+          <Base
+            occupied={!!bases.first}
+            runner={bases.first}
             label="1B"
             className="
               left-[62.5%] top-[68%]

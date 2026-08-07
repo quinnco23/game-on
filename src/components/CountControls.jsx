@@ -4,30 +4,31 @@ import { Button } from "./ui/button"
 import { handleGameAction } from "../services/gameActions"
 import { getCurrentBatter } from "../state/gameLogic"
 import { applyPlay } from "../scoring/playEngine"
+import { getForcedAdvanceDecisions } from "../scoring/getForcedAdvanceDecisions";
 
 
-function getWalkRunnerDecisions(bases) {
-  const decisions = {}
+// function getWalkRunnerDecisions(bases) {
+//   const decisions = {}
 
-  // Runners not forced by the walk remain where they are.
-  if (bases.first) {
-    decisions.first = "second"
-  }
+//   // Runners not forced by the walk remain where they are.
+//   if (bases.first) {
+//     decisions.first = "second"
+//   }
 
-  if (bases.second) {
-    decisions.second =
-      bases.first ? "third" : "second"
-  }
+//   if (bases.second) {
+//     decisions.second =
+//       bases.first ? "third" : "second"
+//   }
 
-  if (bases.third) {
-    decisions.third =
-      bases.first && bases.second
-        ? "home"
-        : "third"
-  }
+//   if (bases.third) {
+//     decisions.third =
+//       bases.first && bases.second
+//         ? "home"
+//         : "third"
+//   }
 
-  return decisions
-}
+//   return decisions
+// }
 
 export function CountControls({ game, dispatch }) {
   const walkLikely = game.balls === 3
@@ -98,7 +99,7 @@ export function CountControls({ game, dispatch }) {
       }
   
       const runnerDecisions =
-        getWalkRunnerDecisions(game.bases)
+      getForcedAdvanceDecisions(game.bases)
   
       /*
        * Adapt the UI score shape to the engine score shape.

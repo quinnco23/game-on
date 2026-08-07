@@ -1622,6 +1622,7 @@ it("ends the half inning when a fly out records the third out", () => {
         homeRuns: 0,
       
         walks: 0,
+        hitByPitch: 0,
         strikeouts: 0,
       
         runs: 0,
@@ -1632,6 +1633,9 @@ it("ends the half inning when a fly out records the third out", () => {
         reachedOnError: 0,
         fieldersChoices: 0,
         groundedIntoDoublePlay: 0,
+
+        sacrificeFlies: 0,
+        sacrificeHits: 0,
       
         runsProduced: 1,
       });
@@ -1780,5 +1784,282 @@ it("ends the half inning when a fly out records the third out", () => {
     ]);
   });
 
+  it("records a 6-4-3 ground-ball double play", () => {
+    const runner = {
+      id: "runner-first",
+      name: "Runner",
+    }
   
+    const batter = {
+      id: "batter-1",
+      name: "Batter",
+    }
+  
+    const gameState = createGameState({
+      status: "active",
+      inning: 2,
+      half: "top",
+      outs: 0,
+  
+      bases: {
+        first: runner,
+        second: null,
+        third: null,
+      },
+    })
+  
+    const result = applyPlay(gameState, {
+      id: "play-double-play",
+      playType: "groundOut",
+      batter,
+  
+      runnerDecisions: {
+        first: "out",
+        batter: "out",
+      },
+  
+      metadata: {
+        doublePlay: true,
+        notation: "6-4-3",
+  
+        fielding: {
+          putouts: ["2B", "1B"],
+          assists: ["SS", "2B"],
+          errors: [],
+        },
+      },
+    })
+  
+    expect(result.ok).toBe(true)
+    expect(result.metadata.outsRecorded).toBe(2)
+    expect(result.state.outs).toBe(2)
+  
+    expect(result.state.bases).toEqual({
+      first: null,
+      second: null,
+      third: null,
+    })
+  
+    expect(
+      result.metadata.batterStats
+        .groundedIntoDoublePlay
+    ).toBe(1)
+  
+    expect(result.metadata.rbiCount).toBe(0)
+  })
+  it("ends the half inning when caught stealing records the third out", () => {
+    const gameState = createGameState({
+      inning: 2,
+      half: "top",
+      outs: 2,
+  
+      bases: {
+        first: {
+          id: "runner-1",
+          name: "Runner",
+        },
+        second: null,
+        third: null,
+      },
+    })
+  
+    const result = applyPlay(gameState, {
+      id: "caught-stealing-play",
+      playType: "caughtStealing",
+  
+      batter: {
+        id: "batter-1",
+        name: "Batter",
+      },
+  
+      runnerDecisions: {
+        first: "out",
+      },
+    })
+  
+    expect(result.ok).toBe(true)
+    expect(result.metadata.outsRecorded).toBe(1)
+    expect(result.metadata.halfInningEnded).toBe(true)
+    expect(result.state.outs).toBe(0)
+    expect(result.state.half).toBe("bottom")
+  })
+  
+  it("records a fielder's choice when the lead runner is retired", () => {
+    const gameState = createGameState({
+      outs: 0,
+  
+      bases: {
+        first: {
+          id: "runner-1",
+          name: "Runner",
+        },
+        second: null,
+        third: null,
+      },
+    })
+  
+    const result = applyPlay(gameState, {
+      id: "fc-play",
+      playType: "fielderChoice",
+  
+      batter: {
+        id: "batter-1",
+        name: "Batter",
+      },
+  
+      batterDestination: "first",
+  
+      runnerDecisions: {
+        first: "out",
+      },
+  
+      metadata: {
+        notation: "6-4",
+        fielding: {
+          putouts: ["2B"],
+          assists: ["SS"],
+          errors: [],
+        },
+      },
+    })
+  
+    expect(result.ok).toBe(true)
+    expect(result.state.outs).toBe(1)
+  
+    expect(result.state.bases).toEqual({
+      first: {
+        id: "batter-1",
+        name: "Batter",
+      },
+      second: null,
+      third: null,
+    })
+  
+    expect(result.metadata.batterStats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 1,
+      hits: 0,
+      fieldersChoices: 1,
+    })
+  })
+
+  it("places the batter on first after reaching on an error", () => {
+    const gameState = createGameState({
+      outs: 0,
+  
+      bases: {
+        first: null,
+        second: null,
+        third: null,
+      },
+    })
+  
+    const batter = {
+      id: "batter-1",
+      name: "Batter",
+    }
+  
+    const result = applyPlay(gameState, {
+      id: "error-play",
+      playType: "reachedOnError",
+      batter,
+      batterDestination: "first",
+  
+      runnerDecisions: {},
+  
+      metadata: {
+        notation: "E6",
+        reachedOnError: true,
+        errorPosition: "SS",
+  
+        fielding: {
+          putouts: [],
+          assists: [],
+          errors: ["SS"],
+        },
+      },
+    })
+  
+    expect(result.ok).toBe(true)
+    expect(result.state.outs).toBe(0)
+    expect(result.state.bases.first).toEqual(batter)
+  
+    expect(result.metadata.batterStats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 1,
+      hits: 0,
+      reachedOnError: 1,
+    })
+  })
+
+  it("records a sacrifice fly when a runner tags and scores", () => {
+    const gameState = createGameState({
+      inning: 1,
+      half: "top",
+      outs: 0,
+  
+      score: {
+        home: 0,
+        away: 0,
+      },
+  
+      bases: {
+        first: null,
+        second: null,
+  
+        third: {
+          id: "runner-1",
+          name: "Runner One",
+        },
+      },
+    })
+  
+    const result = applyPlay(gameState, {
+      id: "sac-fly-1",
+  
+      playType: "flyOut",
+  
+      batter: {
+        id: "batter-1",
+        name: "Batter One",
+      },
+  
+      runnerDecisions: {
+        third: "home",
+      },
+  
+      metadata: {
+        sacrificeFly: true,
+  
+        fielding: {
+          putouts: ["CF"],
+          assists: [],
+          errors: [],
+        },
+      },
+    })
+  
+    expect(result.ok).toBe(true)
+  
+    expect(result.state.outs).toBe(1)
+  
+    expect(result.state.score.away).toBe(1)
+  
+    expect(result.state.bases.third).toBeNull()
+  
+    expect(result.metadata.runsScored).toBe(1)
+  
+    expect(result.metadata.rbiCount).toBe(1)
+  
+    expect(result.metadata.batterStats).toMatchObject({
+      plateAppearances: 1,
+      atBats: 0,
+  
+      hits: 0,
+  
+      sacrificeFlies: 1,
+  
+      rbi: 1,
+    })
+  })
   
