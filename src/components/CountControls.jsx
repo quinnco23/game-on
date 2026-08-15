@@ -30,67 +30,34 @@ import { getForcedAdvanceDecisions } from "../scoring/getForcedAdvanceDecisions"
 //   return decisions
 // }
 
-export function CountControls({ game, dispatch }) {
+export function CountControls({
+  game,
+  dispatch,
+  onBall,
+  onCalledStrike,
+  onSwingingStrike,
+  onFoul,
+  onInPlay,
+  onStrikeout,
+}) {
   const walkLikely = game.balls === 3
   const strikeoutLikely = game.strikes === 2
 
-  async function handleNormalCountEvent(
-    eventType,
-    label,
-    action
-  ) {
-    try {
-      await handleGameAction({
-        game,
-        dispatch,
-        action,
-        eventType,
-        label,
-        extraEventData: {
-          runs: 0,
-          rbi: 0,
-          outs_recorded: 0,
-        },
-      })
-    } catch (error) {
-      console.error(
-        `Could not save ${eventType}:`,
-        error
-      )
 
-      alert(
-        error.message ||
-          `Could not save ${eventType}`
-      )
-    }
-  }
 
   async function handleBall() {
-    const isBallFour = game.balls === 3
+    const isBallFour =
+      game.balls === 3
   
-    console.log("Ball selected:", {
-      ballsBeforePlay: game.balls,
-      isBallFour,
-      bases: game.bases,
-    })
-
-
-  
-    // Balls one through three still use the normal count action.
+    // Balls 1–3
     if (!isBallFour) {
-      await handleNormalCountEvent(
-        "ball",
-        "Ball",
-        {
-          type: "BALL",
-        }
-      )
-  
+      onBall()
       return
     }
   
     try {
-      const batter = getCurrentBatter(game)
+      const batter =
+        getCurrentBatter(game)
   
       if (!batter) {
         throw new Error(
@@ -99,17 +66,10 @@ export function CountControls({ game, dispatch }) {
       }
   
       const runnerDecisions =
-      getForcedAdvanceDecisions(game.bases)
+        getForcedAdvanceDecisions(
+          game.bases
+        )
   
-      /*
-       * Adapt the UI score shape to the engine score shape.
-       *
-       * UI:
-       * score[teamName]
-       *
-       * Engine:
-       * score.home / score.away
-       */
       const engineGameState = {
         ...game,
   
@@ -121,11 +81,12 @@ export function CountControls({ game, dispatch }) {
             game.score?.[game.awayTeam] ?? 0,
         },
   
-        bases: game.bases ?? {
-          first: null,
-          second: null,
-          third: null,
-        },
+        bases:
+          game.bases ?? {
+            first: null,
+            second: null,
+            third: null,
+          },
   
         inning: game.inning ?? 1,
         half: game.half ?? "top",
@@ -144,10 +105,11 @@ export function CountControls({ game, dispatch }) {
         },
       }
   
-      const result = applyPlay(
-        engineGameState,
-        playEvent
-      )
+      const result =
+        applyPlay(
+          engineGameState,
+          playEvent
+        )
   
       if (!result.ok) {
         throw new Error(
@@ -156,9 +118,57 @@ export function CountControls({ game, dispatch }) {
         )
       }
   
+      // Find defensive team
+      const defensiveSide =
+        game.half === "top"
+          ? "home"
+          : "away"
+  
+      const defensiveTeamName =
+        defensiveSide === "home"
+          ? game.homeTeam
+          : game.awayTeam
+  
+      const defensivePlayers =
+        game.gameRoster?.[
+          defensiveTeamName
+        ] ?? []
+  
+      const derivedDefense =
+        Object.fromEntries(
+          defensivePlayers
+            .map((player) => [
+              player.default_position ??
+                player.position,
+              player.id,
+            ])
+            .filter(
+              ([position]) =>
+                position
+            )
+        )
+  
+      const defensiveAlignment =
+        Object.keys(
+          game.defense?.[
+            defensiveSide
+          ] ?? {}
+        ).length > 0
+          ? game.defense[
+              defensiveSide
+            ]
+          : derivedDefense
+  
+      const currentPitcherId =
+        defensiveAlignment?.P ?? null
+  
       console.log(
-        "Walk engine result:",
-        result
+        "BALL FOUR PITCHER:",
+        {
+          defensiveSide,
+          defensiveTeamName,
+          currentPitcherId,
+        }
       )
   
       await handleGameAction({
@@ -169,35 +179,38 @@ export function CountControls({ game, dispatch }) {
           type: "APPLY_PLAY_RESULT",
           result,
           batterId: batter.id,
-  
           pitcherId:
-            game.currentPitcher?.id ??
-            game.pitcher?.id ??
-            null,
+            currentPitcherId,
         },
   
         eventType: "walk",
-        label: `Walk - ${batter.name}`,
+        label:
+          `Walk - ${batter.name}`,
   
         extraEventData: {
           player_id: batter.id,
   
           runs:
-            result.metadata.runsScored,
+            result.metadata
+              .runsScored,
   
           rbi:
-            result.metadata.rbiCount,
+            result.metadata
+              .rbiCount,
   
           outs_recorded:
-            result.metadata.outsRecorded,
+            result.metadata
+              .outsRecorded,
   
           details: {
-            playId: playEvent.id,
+            playId:
+              playEvent.id,
   
             runnerDecisions,
   
             runnerAdvances:
-              result.metadata.runnerAdvances,
+              result.metadata
+                .runnerAdvances,
   
             resultingBases:
               result.state.bases,
@@ -216,120 +229,34 @@ export function CountControls({ game, dispatch }) {
       )
     }
   }
-
-  async function handleStrike() {
-    const isStrikeThree = game.strikes === 2
-  
-    if (!isStrikeThree) {
-      await handleNormalCountEvent(
-        "strike",
-        "Strike",
-        {
-          type: "STRIKE",
-        }
-      )
-  
+  function handleStrike() {
+    if (game.strikes === 2) {
+      onStrikeout()
       return
     }
   
-    try {
-      const batter = getCurrentBatter(game)
-  
-      if (!batter) {
-        throw new Error(
-          "Could not identify the current batter."
-        )
-      }
-  
-      const engineGameState = {
-        ...game,
-  
-        score: {
-          home:
-            game.score?.[game.homeTeam] ?? 0,
-  
-          away:
-            game.score?.[game.awayTeam] ?? 0,
-        },
-  
-        bases: game.bases ?? {
-          first: null,
-          second: null,
-          third: null,
-        },
-  
-        inning: game.inning ?? 1,
-        half: game.half ?? "top",
-        outs: game.outs ?? 0,
-        version: game.version ?? 0,
-      }
-  
-      const playEvent = {
-        id: crypto.randomUUID(),
-        playType: "strikeout",
-        batter,
-  
-        metadata: {
-          resultType: "strikeout",
-        },
-      }
-  
-      const result = applyPlay(
-        engineGameState,
-        playEvent
-      )
-  
-      if (!result.ok) {
-        throw new Error(
-          result.errors?.[0]?.message ??
-            "Could not score the strikeout."
-        )
-      }
-  
-      await handleGameAction({
-        game,
-        dispatch,
-  
-        action: {
-          type: "APPLY_PLAY_RESULT",
-          result,
-          batterId: batter.id,
-  
-          pitcherId:
-            game.currentPitcher?.id ??
-            game.pitcher?.id ??
-            null,
-        },
-  
-        eventType: "strikeout",
-        label: `Strikeout - ${batter.name}`,
-  
-        extraEventData: {
-          player_id: batter.id,
-          runs: 0,
-          rbi: 0,
-          outs_recorded:
-            result.metadata.outsRecorded,
-  
-          details: {
-            playId: playEvent.id,
-            playType: "strikeout",
-          },
-        },
-      })
-    } catch (error) {
-      console.error(
-        "Could not resolve strikeout:",
-        error
-      )
-  
-      alert(
-        error.message ||
-          "Could not resolve strikeout"
-      )
-    }
+    onStrike()
   }
 
+  function handleCalledStrike() {
+    if (game.strikes === 2) {
+      onStrikeout("calledStrike")
+      return
+    }
+  
+    onCalledStrike()
+  }
+  
+  function handleSwingingStrike() {
+    if (game.strikes === 2) {
+      onStrikeout("swingingStrike")
+      return
+    }
+  
+    onSwingingStrike()
+  }
+  
+ 
   return (
     <Card className="rounded-3xl bg-white/10 border-white/10 text-white">
       <CardContent className="p-5 space-y-4">
@@ -343,31 +270,32 @@ export function CountControls({ game, dispatch }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button onClick={handleBall}>
-            {walkLikely ? "Ball 4 / Walk" : "Ball"}
-          </Button>
+        <div className="grid grid-cols-2 gap-2">
+  <Button onClick={handleBall}>
+    {walkLikely
+      ? "Ball 4 / Walk"
+      : "Ball"}
+  </Button>
 
-          <Button onClick={handleStrike}>
-  {strikeoutLikely
-    ? "Strike Three"
-    : "Strike"}
-</Button>
+  <Button onClick={handleCalledStrike}>
+    Called Strike
+  </Button>
 
-          <Button
-            onClick={() =>
-              handleNormalCountEvent(
-                "foul",
-                "Foul Ball",
-                {
-                  type: "FOUL",
-                }
-              )
-            }
-          >
-            Foul
-          </Button>
-        </div>
+  <Button onClick={handleSwingingStrike}>
+    Swinging Strike
+  </Button>
+
+  <Button onClick={onFoul}>
+    Foul
+  </Button>
+
+  <Button
+    className="col-span-2"
+    onClick={onInPlay}
+  >
+    In Play
+  </Button>
+</div>
       </CardContent>
     </Card>
   )

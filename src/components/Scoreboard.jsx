@@ -2,6 +2,8 @@ import { getBattingTeam } from "@/state/gameLogic";
 import { getCurrentBatter } from "@/state/gameLogic";
 import { Card, CardContent } from "./ui/card";
 import { formatPlayer } from "@/state/gameLogic";
+
+
 function TeamScore({ name, score, active }) {
   return (
     <div
@@ -71,7 +73,7 @@ export function Scoreboard({ game }) {
       </div>
     </div>
 
-    <div className="grid grid-cols-2 border-t-2 border-scoreboard-red pt-4">
+    {/* <div className="grid grid-cols-2 border-t-2 border-scoreboard-red pt-4">
       <div>
         <div className="scoreboard-label">
           Outs
@@ -91,7 +93,7 @@ export function Scoreboard({ game }) {
           {formatPlayer(batter)}
         </div>
       </div>
-    </div>
+    </div> */}
   </CardContent>
 </Card>
   );

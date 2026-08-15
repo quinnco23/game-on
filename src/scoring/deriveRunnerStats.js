@@ -1,10 +1,12 @@
 export function deriveRunnerStats(metadata = {}) {
   const runnerAdvances =
-    metadata.runnerAdvances ?? [];
+    metadata.runnerAdvances ?? []
 
-  const playType = metadata.playType;
+  const playType =
+    metadata.playType
 
-  const statsByRunner = new Map();
+  const statsByRunner =
+    new Map()
 
   function getStats(runnerId) {
     if (!statsByRunner.has(runnerId)) {
@@ -13,62 +15,72 @@ export function deriveRunnerStats(metadata = {}) {
         runs: 0,
         stolenBases: 0,
         caughtStealing: 0,
-      });
+        pickedOff: 0,
+      })
     }
 
-    return statsByRunner.get(runnerId);
+    return statsByRunner.get(runnerId)
   }
 
   for (const advance of runnerAdvances) {
     const runnerId =
       advance.runnerId ??
-      advance.runner?.id;
+      advance.runner?.id
 
     if (!runnerId) {
-      continue;
+      continue
     }
 
     const destination =
       advance.to ??
-      advance.destination;
+      advance.destination
 
     const runnerStats =
-      getStats(runnerId);
+      getStats(runnerId)
 
     const scored =
       advance.scored === true ||
       advance.result === "scored" ||
-      destination === "home";
+      destination === "home"
 
     const retired =
       advance.out === true ||
       advance.result === "out" ||
-      destination === "out";
+      destination === "out"
 
     if (scored) {
-      runnerStats.runs += 1;
+      runnerStats.runs += 1
     }
 
     if (
       playType === "stolenBase" &&
       !retired
     ) {
-      runnerStats.stolenBases += 1;
+      runnerStats.stolenBases += 1
     }
 
     if (
       playType === "caughtStealing" &&
       retired
     ) {
-      runnerStats.caughtStealing += 1;
+      runnerStats.caughtStealing += 1
+    }
+
+    if (
+      playType === "pickoff" &&
+      retired
+    ) {
+      runnerStats.pickedOff += 1
     }
   }
 
-  return Array.from(statsByRunner.values())
-    .filter(
-      (stats) =>
-        stats.runs > 0 ||
-        stats.stolenBases > 0 ||
-        stats.caughtStealing > 0,
-    );
+  return Array.from(
+    statsByRunner.values()
+  ).filter(
+    (stats) =>
+      stats.runs > 0 ||
+      stats.stolenBases > 0 ||
+      stats.caughtStealing > 0 ||
+      stats.pickedOff > 0
+  )
 }

@@ -1,36 +1,119 @@
 
 
 
-import React, { useMemo, useReducer, useState } from "react";
-import { Mic, Undo2, Video, Zap, Users, Trophy } from "lucide-react";
-import { LineupEditor } from "./LineupEditor";
-import {Card, CardContent} from "./ui/card"
-import { Button } from "./ui/button";
+import React, {
+  useEffect,
+  useState,
+} from "react"
+
+import { Trophy } from "lucide-react"
+import { LineupEditor } from "./LineupEditor"
+import { Card, CardContent } from "./ui/card"
+import { Button } from "./ui/button"
+
 import { createGame } from "../services/gamesService"
-import { supabase } from "../lib/supabase"
-import { saveLineup } from "../services/playersService"
-
-import { findOrCreateTeam } from "../services/teamServices"
+import { saveLineup, getTeamPlayers } from "../services/playersService"
+import { getTeams } from "@/services/teamService"
 
 
-async function testConnection() {
-  const { data, error } = await supabase
-    .from("teams")
-    .select("*")
 
-  console.log("DATA:", data)
-  console.log("ERROR:", error)
-}
+
 export default function GameSetupScreen({ game, onStart }) {
-  const [homeTeam, setHomeTeam] = useState(game.homeTeam);
-  const [awayTeam, setAwayTeam] = useState(game.awayTeam);
-  const [homeLineup, setHomeLineup] = useState(game.lineups[game.homeTeam]);
-  const [awayLineup, setAwayLineup] = useState(game.lineups[game.awayTeam]);
+
+  const [teams, setTeams] = useState([])
+
+  const [homeTeamId, setHomeTeamId] =
+    useState("")
+
+  const [awayTeamId, setAwayTeamId] =
+    useState("")
+
+  const [homeRoster, setHomeRoster] =
+    useState([])
+
+  const [awayRoster, setAwayRoster] =
+    useState([])
+
+  const [homeLineup, setHomeLineup] =
+    useState([])
+
+  const [awayLineup, setAwayLineup] =
+    useState([])
 
 
+useEffect(() => {
+  async function loadTeams() {
+    try {
+      const result = await getTeams()
+      setTeams(result)
+    } catch (error) {
+      console.error(
+        "Could not load teams:",
+        error
+      )
+    }
+  }
+
+  loadTeams()
+}, [])
+
+async function handleHomeTeamChange(teamId) {
+  setHomeTeamId(teamId)
+  setHomeLineup([])
+
+  if (!teamId) {
+    setHomeRoster([])
+    return
+  }
+
+  try {
+    const roster =
+      await getTeamPlayers(teamId)
+
+    setHomeRoster(roster)
+  } catch (error) {
+    console.error(
+      "Could not load home roster:",
+      error
+    )
+  }
+}
+
+async function handleAwayTeamChange(teamId) {
+  setAwayTeamId(teamId)
+  setAwayLineup([])
+
+  if (!teamId) {
+    setAwayRoster([])
+    return
+  }
+
+  try {
+    const roster =
+      await getTeamPlayers(teamId)
+
+    setAwayRoster(roster)
+  } catch (error) {
+    console.error(
+      "Could not load away roster:",
+      error
+    )
+  }
+}
+
+const homeTeam =
+    teams.find(
+      (team) => team.id === homeTeamId
+    )
+
+  const awayTeam =
+    teams.find(
+      (team) => team.id === awayTeamId
+    )
   
 
   return (
+    
     <main className="scoreboard-shell p-4 md:p-6">
   <Card className="scoreboard-panel mx-auto w-full max-w-md rounded-none text-scoreboard-cream">
     <CardContent className="relative z-10 space-y-6 p-6">
@@ -53,18 +136,33 @@ export default function GameSetupScreen({ game, onStart }) {
           Away Team
         </span>
 
-        <input
-          className="scoreboard-input"
-          value={awayTeam}
-          onChange={(e) => setAwayTeam(e.target.value)}
-          placeholder="Enter away team"
-        />
+        <select
+  className="scoreboard-input w-full"
+  value={awayTeamId}
+  onChange={(e) =>
+    handleAwayTeamChange(e.target.value)
+  }
+>
+  <option value="">
+    Select Away Team
+  </option>
+
+  {teams.map((team) => (
+    <option
+      key={team.id}
+      value={team.id}
+    >
+      {team.name}
+    </option>
+  ))}
+</select>
       </label>
 
       <section className="border-t border-scoreboard-cream/30 pt-5">
         <LineupEditor
-          title={`${awayTeam} Lineup`}
+           title={`${awayTeam?.name ?? "Away"} Lineup`}
           lineup={awayLineup}
+          roster={awayRoster}
           setLineup={setAwayLineup}
         />
       </section>
@@ -74,70 +172,133 @@ export default function GameSetupScreen({ game, onStart }) {
           Home Team
         </span>
 
-        <input
-          className="scoreboard-input"
-          value={homeTeam}
-          onChange={(e) => setHomeTeam(e.target.value)}
-          placeholder="Enter home team"
-        />
+        <select
+  className="scoreboard-input w-full"
+  value={homeTeamId}
+  onChange={(e) =>
+    handleHomeTeamChange(e.target.value)
+  }
+>
+  <option value="">
+    Select Home Team
+  </option>
+
+  {teams.map((team) => (
+    <option
+      key={team.id}
+      value={team.id}
+    >
+      {team.name}
+    </option>
+  ))}
+</select>
       </label>
 
       <section className="border-t border-scoreboard-cream/30 pt-5">
         <LineupEditor
-          title={`${homeTeam} Lineup`}
+            title={`${homeTeam?.name ?? "Home"} Lineup`}
           lineup={homeLineup}
+          roster={homeRoster}
           setLineup={setHomeLineup}
         />
       </section>
 
       <div className="space-y-3 border-t-2 border-scoreboard-red pt-5">
-        <Button
-          className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
-          onClick={async () => {
-            try {
-              const savedHomeTeam = await findOrCreateTeam(homeTeam)
-              const savedAwayTeam = await findOrCreateTeam(awayTeam)
+      <Button
+  className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
+  onClick={async () => {
+    console.log("START GAME BUTTON CLICKED")
 
-              const savedGame = await createGame({
-                homeTeamId: savedHomeTeam.id,
-                awayTeamId: savedAwayTeam.id,
-              })
+    console.log("SETUP STATE:", {
+      homeTeam,
+      awayTeam,
+      homeLineup,
+      awayLineup,
+      homeRoster,
+      awayRoster,
+    })
 
-              const savedHomeLineup = await saveLineup({
-                gameId: savedGame.id,
-                teamId: savedHomeTeam.id,
-                lineup: homeLineup,
-              })
+    try {
+      if (!homeTeam || !awayTeam) {
+        alert(
+          "Select both a home and away team."
+        )
+        return
+      }
 
-              const savedAwayLineup = await saveLineup({
-                gameId: savedGame.id,
-                teamId: savedAwayTeam.id,
-                lineup: awayLineup,
-              })
+      console.log("ABOUT TO CREATE GAME")
 
-              onStart({
-                gameId: savedGame.id,
-                homeTeam: savedHomeTeam.name,
-                awayTeam: savedAwayTeam.name,
-                homeLineup: savedHomeLineup,
-                awayLineup: savedAwayLineup,
-              })
-            } catch (error) {
-              console.error("Could not start game:", error)
-              alert(error.message)
-            }
-          }}
-        >
-          Start Game
-        </Button>
+      const savedGame =
+        await createGame({
+          homeTeamId: homeTeam.id,
+          awayTeamId: awayTeam.id,
+        })
 
-        <Button
-          variant="outline"
-          className="scoreboard-button w-full rounded-none"
-          onClick={testConnection}
-        >
-          Test Supabase
-        </Button>
+      console.log(
+        "GAME CREATED:",
+        savedGame
+      )
+
+      console.log(
+        "HOME LINEUP BEFORE SAVE:",
+        homeLineup
+      )
+
+      console.log(
+        "AWAY LINEUP BEFORE SAVE:",
+        awayLineup
+      )
+
+      const savedHomeLineup =
+        await saveLineup({
+          gameId: savedGame.id,
+          teamId: homeTeam.id,
+          lineup: homeLineup,
+        })
+
+      console.log(
+        "SAVED HOME LINEUP:",
+        savedHomeLineup
+      )
+
+      const savedAwayLineup =
+        await saveLineup({
+          gameId: savedGame.id,
+          teamId: awayTeam.id,
+          lineup: awayLineup,
+        })
+
+      console.log(
+        "SAVED AWAY LINEUP:",
+        savedAwayLineup
+      )
+
+      onStart({
+        gameId: savedGame.id,
+
+        homeTeam: homeTeam.name,
+        awayTeam: awayTeam.name,
+
+        homeLineup: savedHomeLineup,
+        awayLineup: savedAwayLineup,
+
+        homeRoster,
+        awayRoster,
+      })
+    } catch (error) {
+      console.error(
+        "Could not start game:",
+        error
+      )
+
+      alert(error.message)
+    }
+  }}
+>
+  Start Game
+</Button>
+
+       
       </div>
     </CardContent>
   </Card>

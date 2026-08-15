@@ -8,6 +8,11 @@ import {
   finishGame,
 } from "../services/gamesService";
 
+import {
+
+  updateGameState,
+} from "../services/gamesService"
+
 import { HomeScreen } from "./HomeScreen";
 import { CountControls } from "./CountControls";
 import GameSetupScreen from "./GameSetupScreen";
@@ -27,9 +32,25 @@ import { resolveRunnerMovement } from "@/scoring/runnerEngine";
 import { applyPlay } from "../scoring/playEngine";
 import { getForcedAdvanceDecisions } from "@/scoring/getForcedAdvanceDecisions";
 import { createOutPlayEvent } from "../scoring/createOutPlayEvent"
+import { DefenseAlignment } from "./DefenseAlignment"
+import { DefensiveAlignmentField } from "./DefensiveAlignmentField";
+
+import { PitcherChangeDialog } from "./PitcherChangeDialog";
+import {
+  createPitchEvent,
+  PITCH_RESULTS,
+} from "../scoring/pitchEvent"
+import { TeamScreen } from "./TeamScreen";
+import { useNavigate } from "react-router-dom"
+
+import {
+  derivePitchCountStats,
+  
+} from "../scoring/pitchEvent"
 
 function FieldBase({ runner, label, className = "" }) {
   const occupied = Boolean(runner);
+
 
   return (
     <div className={className}>
@@ -60,8 +81,28 @@ function FieldBase({ runner, label, className = "" }) {
   );
 }
 
+
+   
 export default function TapScorePrototype() {
   const [game, dispatch] = useReducer(gameReducer, initialGame);
+  console.log(
+    "BATTER STATS:",
+    game.stats?.batters
+  )
+  
+  console.log(
+    "FIELDER STATS:",
+    game.stats?.fielders
+
+
+  )
+
+  console.log(
+    "PITCHER STATS:",
+    game.stats?.pitchers
+  )
+
+  console.log("GAME LINEUPS:", game.lineups)
   const [pendingHitType, setPendingHitType] = useState(null);
 
   const [screen, setScreen] = useState("home");
@@ -72,6 +113,11 @@ export default function TapScorePrototype() {
   const [showVoiceConfirm, setShowVoiceConfirm] = useState(false);
   const [showAudioPrompt, setShowAudioPrompt] = useState(false);
   const [showOutResultDialog, setShowOutResultDialog] = useState(false);
+  const [showPitcherChange, setShowPitcherChange] =
+  useState(false)
+  const [selectedTeam, setSelectedTeam] =
+  useState(null)
+  const navigate = useNavigate()
 
   // useEffect(() => {
   //   const result = resolveRunnerMovement({
@@ -91,30 +137,121 @@ export default function TapScorePrototype() {
   //   })
 
   //   console.log("Runner engine result:", result)
+  
   // }, [])
 
-  useEffect(() => {
-    async function loadHomeData() {
-      try {
-        const [currentGame, completedGames] = await Promise.all([
-          getActiveGame(),
-          getFinishedGames(),
-        ]);
+  
 
-        console.log("Active game:", currentGame);
-        console.log("Finished games:", completedGames);
+ const defensiveSide =
+  game.half === "top"
+    ? "home"
+    : "away"
 
-        setActiveGame(currentGame);
-        setFinishedGames(completedGames);
-      } catch (error) {
-        console.error("Could not load game data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+const defensiveTeamName =
+  defensiveSide === "home"
+    ? game.homeTeam
+    : game.awayTeam
 
-    loadHomeData();
-  }, []);
+    const defensivePlayers =
+  game.gameRoster?.[defensiveTeamName] ?? []
+
+  const derivedDefense =
+  Object.fromEntries(
+    defensivePlayers
+      .map((player) => [
+        player.default_position ??
+          player.position,
+        player.id,
+      ])
+      .filter(([position]) => position)
+  )
+
+  
+
+  const defensiveAlignment =
+  Object.keys(
+    game.defense?.[defensiveSide] ?? {}
+  ).length > 0
+    ? game.defense[defensiveSide]
+    : derivedDefense
+
+
+const currentPitcherId =
+  game.defense?.[defensiveSide]?.P ?? null
+
+const currentPitcher =
+  game.gameRoster?.[defensiveTeamName]
+    ?.find(
+      (player) =>
+        player.id === currentPitcherId
+    ) ?? null
+    const currentPitcherStats =
+    game.stats?.pitchers?.[currentPitcherId] ?? {}
+  
+  const pitchCount =
+    currentPitcherStats.pitches ?? 0
+    
+   
+
+    
+  
+ 
+    
+      useEffect(() => {
+        if (
+          !game.id ||
+          game.status !== "scoring"
+        ) {
+          return
+        }
+      
+        async function persistGame() {
+          try {
+            const savedGame = await updateGameState(
+              game.id,
+              game
+            )
+      
+            setActiveGame(savedGame)
+          } catch (error) {
+            console.error(
+              "Could not persist game state:",
+              error
+            )
+          }
+        }
+      
+        persistGame()
+      }, [game])
+      useEffect(() => {
+        async function loadHomeData() {
+          try {
+            const [currentGame, completedGames] = await Promise.all([
+              getActiveGame(),
+              getFinishedGames(),
+            ]);
+      
+            console.log("Active game:", currentGame);
+            console.log("Finished games:", completedGames);
+      
+            setActiveGame(currentGame);
+            setFinishedGames(completedGames);
+          } catch (error) {
+            console.error("Could not load game data:", error);
+          } finally {
+            setLoading(false);
+          }
+        }
+      
+        loadHomeData();
+      }, []);
+
+    
+const currentPitchCount =
+  (game.pitchEvents ?? []).filter(
+    (pitch) =>
+      pitch.pitcherId === currentPitcherId
+  ).length
 
   if (loading) {
     return (
@@ -124,10 +261,19 @@ export default function TapScorePrototype() {
     );
   }
 
+  if (loading) {
+    return (
+      <div>
+        Loading...
+      </div>
+    )
+  }
+
   if (screen === "home") {
     return (
       <HomeScreen
         activeGame={activeGame}
+        onTeams={() => navigate("/teams")}
         finishedGames={finishedGames}
         onResume={(selectedGame) => {
           const savedState = selectedGame.state ?? selectedGame.game_state;
@@ -164,18 +310,33 @@ export default function TapScorePrototype() {
     );
   }
 
+  if (screen === "teams") {
+    return (
+      <TeamScreen
+        onBack={() => setScreen("home")}
+        onSelectTeam={(team) => {
+          setSelectedTeam(team)
+          setScreen("team")
+        }}
+      />
+    )
+  }
+
   if (screen === "setup" || game.status === "setup") {
     return (
       <GameSetupScreen
-        game={game}
-        onStart={(payload) => {
-          dispatch({
-            type: "START_GAME",
-            ...payload,
-          });
-          setScreen("scoring");
-        }}
-      />
+      game={game}
+      onStart={(payload) => {
+        console.log("START GAME PAYLOAD:", payload)
+    
+        dispatch({
+          type: "START_GAME",
+          ...payload,
+        })
+    
+        setScreen("scoring")
+      }}
+    />
     );
   }
 
@@ -319,6 +480,8 @@ export default function TapScorePrototype() {
           advancementReason: "passedBall",
         },
       };
+
+     
 
       const result = applyPlay(engineGameState, playEvent);
 
@@ -660,13 +823,404 @@ export default function TapScorePrototype() {
     }
   }
 
+  async function handlePickoff(from, runnerOut) {
+    try {
+      const runner = game.bases?.[from]
+  
+      if (!runner) {
+        throw new Error(`There is no runner on ${from}.`)
+      }
+  
+      const engineGameState = {
+        ...game,
+  
+        score: {
+          home: game.score?.[game.homeTeam] ?? 0,
+          away: game.score?.[game.awayTeam] ?? 0,
+        },
+  
+        bases: game.bases ?? {
+          first: null,
+          second: null,
+          third: null,
+        },
+  
+        inning: game.inning ?? 1,
+        half: game.half ?? "top",
+        outs: game.outs ?? 0,
+        version: game.version ?? 0,
+      }
+  
+      const playEvent = {
+        id: crypto.randomUUID(),
+        playType: "pickoff",
+  
+        batter: getCurrentBatter(game),
+  
+        runnerDecisions:
+          runnerOut
+            ? {
+                [from]: "out",
+              }
+            : {},
+  
+        metadata: {
+          runnerId: runner.id,
+          runnerName: runner.name,
+          from,
+          to: runnerOut ? "out" : from,
+          runnerOut,
+        },
+      }
+  
+      const result = applyPlay(
+        engineGameState,
+        playEvent,
+      )
+  
+      if (!result.ok) {
+        throw new Error(
+          result.errors?.[0]?.message ??
+            "Could not record pickoff.",
+        )
+      }
+  
+      const label =
+        runnerOut
+          ? `Pickoff - ${runner.name} out at ${from}`
+          : `Pickoff attempt - ${runner.name} safe at ${from}`
+  
+      await handleGameAction({
+        game,
+        dispatch,
+  
+        action: {
+          type: "APPLY_PLAY_RESULT",
+          result,
+  
+          batterId: null,
+  
+          pitcherId:
+            game.currentPitcher?.id ??
+            game.pitcher?.id ??
+            null,
+  
+          label,
+        },
+  
+        eventType: "pickoff",
+        label,
+  
+        extraEventData: {
+          player_id: runner.id,
+  
+          runs: 0,
+          rbi: 0,
+  
+          outs_recorded:
+            result.metadata?.outsRecorded ?? 0,
+  
+          details: {
+            playId: playEvent.id,
+            runnerId: runner.id,
+            from,
+            runnerOut,
+            runnerAdvances:
+              result.metadata?.runnerAdvances,
+          },
+        },
+      })
+    } catch (error) {
+      console.error(
+        "Could not record pickoff:",
+        error,
+      )
+  
+      alert(
+        error.message ||
+          "Could not record pickoff"
+      )
+    }
+  }
+
+  function handlePitch(result) {
+    const batter = getCurrentBatter(game)
+  
+    const pitcherId =
+      currentPitcherId
+  
+    const pitchEvent = createPitchEvent({
+      pitcherId,
+      batterId: batter?.id ?? null,
+      result,
+      inning: game.inning,
+      half: game.half,
+    })
+  
+    const pitchStats =
+      derivePitchCountStats(result)
+  
+    console.log("PITCH EVENT:", pitchEvent)
+    console.log("PITCH STATS:", pitchStats)
+  
+    dispatch({
+      type: "PITCH_EVENT",
+      pitchEvent,
+      pitcherId,
+      pitcherStats: pitchStats,
+    })
+  }
+
+
+  async function handleStrikeoutPitch(strikeResult)  {
+    try {
+      const batter = getCurrentBatter(game)
+  
+      if (!batter) {
+        throw new Error(
+          "Could not identify the current batter."
+        )
+      }
+  
+      // First: record pitch #3.
+      handlePitch(strikeResult)
+
+  
+      const engineGameState = {
+        ...game,
+  
+        score: {
+          home:
+            game.score?.[game.homeTeam] ?? 0,
+  
+          away:
+            game.score?.[game.awayTeam] ?? 0,
+        },
+  
+        bases: game.bases ?? {
+          first: null,
+          second: null,
+          third: null,
+        },
+  
+        inning: game.inning ?? 1,
+        half: game.half ?? "top",
+        outs: game.outs ?? 0,
+        version: game.version ?? 0,
+      }
+  
+      const playEvent = {
+        id: crypto.randomUUID(),
+  
+        playType: "strikeout",
+  
+        batter,
+  
+        runnerDecisions: {},
+  
+        metadata: {
+          resultType: "strikeout",
+        },
+      }
+  
+      const result = applyPlay(
+        engineGameState,
+        playEvent
+      )
+  
+      if (!result.ok) {
+        throw new Error(
+          result.errors?.[0]?.message ??
+            "Could not record strikeout."
+        )
+      }
+  
+      await handleGameAction({
+        game,
+        dispatch,
+  
+        action: {
+          type: "APPLY_PLAY_RESULT",
+  
+          result,
+  
+          batterId: batter.id,
+  
+          pitcherId:
+            game.defense?.[defensiveSide]?.P ??
+            derivedDefense?.P ??
+            null,
+  
+          label: `Strikeout - ${batter.name}`,
+        },
+  
+        eventType: "strikeout",
+  
+        label: `Strikeout - ${batter.name}`,
+  
+        extraEventData: {
+          player_id: batter.id,
+          runs: 0,
+          rbi: 0,
+  
+          outs_recorded:
+            result.metadata?.outsRecorded ?? 1,
+  
+          details: {
+            playId: playEvent.id,
+          },
+        },
+      })
+    } catch (error) {
+      console.error(
+        "Could not record strikeout:",
+        error
+      )
+  
+      alert(
+        error.message ||
+          "Could not record strikeout"
+      )
+    }
+  }
+
+  
   return (
     <main className="min-h-screen bg-green-950 text-white p-4">
       <div className="mx-auto max-w-md space-y-4">
         <Scoreboard game={game} />
-        <BaseRunnersField bases={game.bases} />
+        <div className="relative">
+  <BaseRunnersField 
+  bases={game.bases} 
+  batter={getCurrentBatter(game)}
+  outs={game.outs}
+  game={game}/>
+{/* <pre className="text-xs bg-white p-2">
+  {JSON.stringify(
+    {
+      defensiveTeam,
+      defensivePlayers,
+      defensiveAlignment,
+    },
+    null,
+    2
+  )}
+</pre> */}
+{/* <pre className="text-xs bg-white text-black p-2 overflow-auto">
+  {JSON.stringify(
+    {
+      defensivePlayers,
+      defensiveAlignment,
+    },
+    null,
+    2
+  )}
+</pre> */}
 
-        <CountControls game={game} dispatch={dispatch} />
+
+
+<DefensiveAlignmentField
+  defense={defensiveAlignment}
+  players={defensivePlayers}
+  pitchCount={currentPitchCount}
+  
+  onAssign={(position, playerId) => {
+    dispatch({
+      type: "SET_DEFENSIVE_POSITION",
+      team: defensiveSide,
+      position,
+      playerId,
+    })
+  }}
+  onPitcherChange={() => {
+    console.log("OPENING PITCHER DIALOG")
+
+    setShowPitcherChange(true)
+  }}
+  
+/>
+{showPitcherChange && (
+  <PitcherChangeDialog
+    currentPitcher={currentPitcher}
+    players={defensivePlayers}
+    pitchCount={pitchCount}
+    onCancel={() =>
+      setShowPitcherChange(false)
+    }
+    onSelect={(playerId) => {
+      dispatch({
+        type: "CHANGE_PITCHER",
+        team: defensiveSide,
+        playerId,
+      })
+
+      setShowPitcherChange(false)
+    }}
+  />
+)}
+</div>
+        {/* <DefenseAlignment
+  team={defensiveTeam}
+  players={defensivePlayers}
+  defense={defensiveAlignment}
+  onAssign={(position, playerId) => {
+    dispatch({
+      type: "SET_DEFENSIVE_POSITION",
+      team: defensiveTeam,
+      position,
+      playerId,
+    })
+  }}
+/> */}
+
+<CountControls
+  game={game}
+  dispatch={dispatch}
+
+  onBall={() => {
+    handlePitch(PITCH_RESULTS.BALL)
+
+    dispatch({
+      type: "BALL",
+    })
+  }}
+
+  onCalledStrike={() => {
+    handlePitch(
+      PITCH_RESULTS.CALLED_STRIKE
+    )
+
+    dispatch({
+      type: "STRIKE",
+    })
+  }}
+
+  onSwingingStrike={() => {
+    handlePitch(
+      PITCH_RESULTS.SWINGING_STRIKE
+    )
+
+    dispatch({
+      type: "STRIKE",
+    })
+  }}
+
+  onFoul={() => {
+    handlePitch(PITCH_RESULTS.FOUL)
+
+    dispatch({
+      type: "FOUL",
+    })
+  }}
+
+  onInPlay={() => {
+    handlePitch(PITCH_RESULTS.IN_PLAY)
+
+    setPendingHitType("inPlay")
+  }}
+
+  onStrikeout={handleStrikeoutPitch}
+/>
 
         <PlayControls
           game={game}
@@ -681,6 +1235,7 @@ export default function TapScorePrototype() {
           onWildPitch={handleWildPitch}
           onHitByPitch={handleHitByPitch}
           onCaughtStealing={handleCaughtStealing}
+          onPickoff={handlePickoff}
         />
 
         {pendingHitType && (
@@ -872,6 +1427,7 @@ export default function TapScorePrototype() {
         {showOutResultDialog && (
           <OutResultDialog
           bases={game.bases}
+          defense={defensiveAlignment}
           onCancel={() => setShowOutResultDialog(false)}
           onConfirm={async ({
               eventType,
@@ -879,6 +1435,8 @@ export default function TapScorePrototype() {
               action,
               details,
               outsRecorded,
+              
+              
             }) => {
               try {
                 /*
@@ -898,14 +1456,18 @@ export default function TapScorePrototype() {
                   }
 
                   const enginePlayType =
-                    eventType === "groundout"
-                      ? "groundOut"
-                      : eventType === "flyout"
-                      ? "flyOut"
-                      : "fielderChoice";
+  eventType === "groundout"
+    ? "groundOut"
+    : eventType === "flyout"
+    ? "flyOut"
+    : eventType === "error"
+    ? "reachedOnError"
+    : "fielderChoice";
 
                   const isDoublePlay =
                     eventType === "groundout" && details.doublePlay === true;
+
+                    
 
                   const engineGameState = {
                     ...game,
@@ -928,56 +1490,11 @@ export default function TapScorePrototype() {
                     version: game.version ?? 0,
                   };
 
-                  const fieldedBy = details.fieldedByPosition;
-
-                  const putoutPosition = details.putoutPosition;
-
-                  let fielding;
-
-                  if (eventType === "groundout") {
-                    if (isDoublePlay) {
-                      fielding = {
-                        // 6-4-3:
-                        // 2B gets the force putout
-                        // 1B gets the batter putout
-                        putouts: [
-                          details.middlePosition,
-                          putoutPosition,
-                        ].filter(Boolean),
-
-                        // SS gets first assist
-                        // 2B gets second assist
-                        assists: [fieldedBy, details.middlePosition].filter(
-                          Boolean
-                        ),
-
-                        errors: [],
-                      };
-                    } else {
-                      fielding = {
-                        putouts: putoutPosition ? [putoutPosition] : [],
-
-                        assists:
-                          fieldedBy &&
-                          putoutPosition &&
-                          fieldedBy !== putoutPosition
-                            ? [fieldedBy]
-                            : [],
-
-                        errors: [],
-                      };
-                    }
-                  } else {
-                    /*
-                     * A routine flyout credits the catching fielder
-                     * with the putout and no assist.
-                     */
-                    fielding = {
-                      putouts: fieldedBy ? [fieldedBy] : [],
-
-                      assists: [],
-                      errors: [],
-                    };
+                  const fielding =
+                  details.fielding ?? {
+                    putouts: [],
+                    assists: [],
+                    errors: [],
                   }
 
                   if (isDoublePlay && !game.bases?.first) {
@@ -1057,6 +1574,10 @@ export default function TapScorePrototype() {
                       triplePlay: false,
                     },
                   };
+                  console.log(
+                    "PLAY EVENT FIELDING BEFORE ENGINE:",
+                    playEvent.metadata.fielding
+                  )
 
                   const result = applyPlay(engineGameState, playEvent);
 
@@ -1139,16 +1660,37 @@ export default function TapScorePrototype() {
         <EventFeed events={game.events ?? []} />
 
         <BoxScore
-          title={game.awayTeam}
-          lineup={game.lineups?.[game.awayTeam] ?? []}
-          gameStats={game.stats}
-        />
+  title={game.awayTeam}
+  lineup={
+    game.lineups?.[game.awayTeam] ?? []
+  }
+  gameStats={game.stats}
+/>
 
-        <BoxScore
-          title={game.homeTeam}
-          lineup={game.lineups?.[game.homeTeam] ?? []}
-          gameStats={game.stats}
-        />
+<BoxScore
+  title={game.homeTeam}
+  lineup={
+    game.lineups?.[game.homeTeam] ?? []
+  }
+  gameStats={game.stats}
+/>
+
+<Button
+  onClick={() => {
+    dispatch({
+      type: "SET_DEFENSIVE_POSITION",
+      team: "home",
+      position: "SS",
+      playerId: "player-123",
+    })
+  }}
+>
+
+<pre>
+  {JSON.stringify(game.defense, null, 2)}
+</pre>
+  Test Defense
+</Button>
 
         <Button
           className="w-full rounded-2xl"

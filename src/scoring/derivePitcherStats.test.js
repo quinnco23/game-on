@@ -6,31 +6,22 @@ import { derivePitcherStats } from "./derivePitcherStats";
 describe("derivePitcherStats", () => {
   it("charges a hit after a single", () => {
     const result = derivePitcherStats({
-      playType: "single",
-
-      playDefinition: {
-        isAtBat: true,
-        isHit: true,
-      },
-
-      outsRecorded: 0,
-      runsScored: 0,
-    });
-
-    expect(result).toEqual({
       battersFaced: 1,
-
       outsRecorded: 0,
-
+    
       hitsAllowed: 1,
+    
       singlesAllowed: 1,
       doublesAllowed: 0,
       triplesAllowed: 0,
       homeRunsAllowed: 0,
-
+    
       walksAllowed: 0,
       strikeouts: 0,
-
+    
+      pickoffAttempts: 0,
+      pickoffs: 0,
+    
       runsAllowed: 0,
       earnedRuns: 0,
     });
@@ -51,20 +42,18 @@ describe("derivePitcherStats", () => {
 
     expect(result).toEqual({
       battersFaced: 1,
-
-      outsRecorded: 1,
-
-      hitsAllowed: 0,
-      singlesAllowed: 0,
-      doublesAllowed: 0,
-      triplesAllowed: 0,
-      homeRunsAllowed: 0,
-
-      walksAllowed: 0,
-      strikeouts: 1,
-
-      runsAllowed: 0,
-      earnedRuns: 0,
+  outsRecorded: 1,
+  hitsAllowed: 0,
+  singlesAllowed: 0,
+  doublesAllowed: 0,
+  triplesAllowed: 0,
+  homeRunsAllowed: 0,
+  walksAllowed: 0,
+  strikeouts: 1,
+  pickoffAttempts: 0,
+  pickoffs: 0,
+  runsAllowed: 0,
+  earnedRuns: 0,
     });
   });
 
@@ -83,20 +72,18 @@ describe("derivePitcherStats", () => {
 
     expect(result).toEqual({
       battersFaced: 1,
-
-      outsRecorded: 0,
-
-      hitsAllowed: 0,
-      singlesAllowed: 0,
-      doublesAllowed: 0,
-      triplesAllowed: 0,
-      homeRunsAllowed: 0,
-
-      walksAllowed: 1,
-      strikeouts: 0,
-
-      runsAllowed: 0,
-      earnedRuns: 0,
+  outsRecorded: 0,
+  hitsAllowed: 0,
+  singlesAllowed: 0,
+  doublesAllowed: 0,
+  triplesAllowed: 0,
+  homeRunsAllowed: 0,
+  walksAllowed: 1,
+  strikeouts: 0,
+  pickoffAttempts: 0,
+  pickoffs: 0,
+  runsAllowed: 0,
+  earnedRuns: 0,
     });
   });
 
@@ -198,6 +185,19 @@ describe("derivePitcherStats", () => {
     expect(result.runsAllowed).toBe(3);
     expect(result.earnedRuns).toBe(3);
   });
-
+  it("credits a successful pickoff", () => {
+    const stats = derivePitcherStats({
+      playType: "pickoff",
+  
+      event: {
+        runnerOut: true,
+      },
+    })
+  
+    expect(stats).toMatchObject({
+      pickoffAttempts: 1,
+      pickoffs: 1,
+    })
+  })
   
 });

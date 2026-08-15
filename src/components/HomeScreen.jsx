@@ -1,5 +1,6 @@
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
+import { GameScoreCard } from "./GameScoreCard"
 
 function getSavedState(game) {
   return game?.state ?? game?.game_state ?? {}
@@ -11,10 +12,20 @@ function getFinalScore(game) {
   return {
     awayTeam: state.awayTeam || "Away",
     homeTeam: state.homeTeam || "Home",
-    awayScore: state.score?.[state.awayTeam] ?? 0,
-    homeScore: state.score?.[state.homeTeam] ?? 0,
+
+    awayScore:
+      state.score?.[state.awayTeam] ?? 0,
+
+    homeScore:
+      state.score?.[state.homeTeam] ?? 0,
+
     inning: state.inning || 1,
     half: state.half || "top",
+
+    outs: state.outs ?? 0,
+    balls: state.balls ?? 0,
+    strikes: state.strikes ?? 0,
+
     events: state.events || [],
   }
 }
@@ -65,81 +76,49 @@ export function HomeScreen({
   onNewGame,
   onResume,
   onViewFinished,
+  onTeams,
 }) {
 
   const activeScore = activeGame
   ? getFinalScore(activeGame)
   : null
+
+  console.log("HomeScreen activeGame:", activeGame)
+  console.log(
+    "HomeScreen savedState:",
+    getSavedState(activeGame)
+  )
+
+  
   return (
     <main className="scoreboard-shell min-h-screen p-4">
       <div className="mx-auto max-w-3xl space-y-5">
-        <header className="border-b-2 border-scoreboard-red pb-4">
-          <p className="scoreboard-label">
-            Official Scoring System
+        <header className="border-b-2 border-scoreboard-red pb-4  ">
+          <p className="scoreboard-label  text-3xl">
+            SCSA
           </p>
 
-          <h1 className="scoreboard-title mt-1 text-3xl">
-            GameOn
+          <h1 className=" mt-1 text-sm">
+            Powered by <span className="text-scoreboard-red">gameOnAI </span>
           </h1>
+
+          <button
+  className="scoreboard-button w-full"
+  onClick={onTeams}
+>
+  Teams & Rosters
+</button>
         </header>
 
-        {activeGame && activeScore && (
-  <section className="scoreboard-panel relative z-10 p-5">
-    <div className="flex items-center justify-between">
-      <div className="scoreboard-label">
-        Game in progress
-      </div>
-
-      <div className="scoreboard-label text-scoreboard-amber">
-        {activeScore.half === "top" ? "Top" : "Bottom"}{" "}
-        {activeScore.inning}
-      </div>
-    </div>
-
-    <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-      <div>
-        <div className="scoreboard-label">
-          Away
-        </div>
-
-        <div className="scoreboard-title mt-1">
-          {activeScore.awayTeam}
-        </div>
-      </div>
-
-      <div className="scoreboard-number whitespace-nowrap text-2xl">
-        {activeScore.awayScore}
-
-        <span className="mx-3 text-scoreboard-red">
-          –
-        </span>
-
-        {activeScore.homeScore}
-      </div>
-
-      <div className="text-right">
-        <div className="scoreboard-label">
-          Home
-        </div>
-
-        <div className="scoreboard-title mt-1">
-          {activeScore.homeTeam}
-        </div>
-      </div>
-    </div>
-
-    <div className="mt-4 border-t border-scoreboard-cream/30 pt-4">
-      <button
-        type="button"
-        className="scoreboard-button scoreboard-button-primary w-full"
-        onClick={() => onResume(activeGame)}
-      >
-        Resume Game
-      </button>
-    </div>
-  </section>
+        {activeGame && (
+  <GameScoreCard
+    game={activeGame}
+    status="live"
+    onClick={() =>
+      onResume(activeGame)
+    }
+  />
 )}
-
         <button
           type="button"
           className="scoreboard-button w-full"
@@ -170,6 +149,7 @@ export function HomeScreen({
 )}
         </section>
       </div>
+      
     </main>
   )
 }

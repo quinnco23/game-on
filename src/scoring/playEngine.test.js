@@ -2062,4 +2062,79 @@ it("ends the half inning when a fly out records the third out", () => {
       rbi: 1,
     })
   })
+
+  it("records a successful pickoff", () => {
+    const gameState = createGameState({
+      inning: 1,
+      half: "top",
+      outs: 0,
+  
+      bases: {
+        first: {
+          id: "runner-1",
+          name: "Runner One",
+        },
+        second: null,
+        third: null,
+      },
+    })
+  
+    const batter = {
+      id: "batter-1",
+      name: "Batter One",
+    }
+  
+    const result = applyPlay(gameState, {
+      id: "pickoff-1",
+      playType: "pickoff",
+  
+      // Batter remains at the plate.
+      batter,
+  
+      runnerDecisions: {
+        first: "out",
+      },
+  
+      metadata: {
+        runnerId: "runner-1",
+        runnerOut: true,
+        from: "first",
+        to: "out",
+      },
+    })
+  
+    expect(result.ok).toBe(true)
+  
+    // Runner removed.
+    expect(result.state.bases.first).toBeNull()
+  
+    // Pickoff records an out.
+    expect(result.state.outs).toBe(1)
+  
+    // No run scored.
+    expect(result.metadata.runsScored).toBe(0)
+  
+    // Runner receives PO.
+    expect(result.metadata.runnerStats).toEqual([
+      expect.objectContaining({
+        runnerId: "runner-1",
+        pickedOff: 1,
+      }),
+    ])
+  
+    // Pitcher receives an attempt + successful pickoff.
+    expect(result.metadata.pitcherStats).toMatchObject({
+      battersFaced: 0,
+      pickoffAttempts: 1,
+      pickoffs: 1,
+    })
+  
+    // This is not a batter result.
+    expect(result.metadata.batterStats).toMatchObject({
+      plateAppearances: 0,
+      atBats: 0,
+      hits: 0,
+      rbi: 0,
+    })
+  })
   

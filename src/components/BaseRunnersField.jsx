@@ -1,5 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card"
 
+import { getCurrentBatter } from "@/state/gameLogic";
+
+
 function FieldBase({
   occupied,
   label,
@@ -34,9 +37,9 @@ function Base({ occupied, runner,  className = "", }) {
   }`}/>
 
     {runner && (
-      <div className="absolute left-1/2 bottom-8 z-10 -translate-x-1/2 whitespace-nowrap text-center text-white drop-shadow-md">
+      <div className="absolute left-1/2 bottom-8 z-10 -translate-x-1/2 whitespace-nowrap text-center text-yellow-400 drop-shadow-md">
         <div className="text-[8px] font-black">
-          #{runner.number}
+          {/* #{runner.number} */}
         </div>
         <div className="text-[8px] font-medium">
           {runner.name}
@@ -48,16 +51,22 @@ function Base({ occupied, runner,  className = "", }) {
 }
 
 export function BaseRunnersField({
+  game,
   bases,
   occupied,
   title = "Base Runners",
+  outs = 0,
 }) 
 
 
+
+
 {
+
+  const batter = getCurrentBatter(game);
   return (
     <Card className="ballpark-card">
-      <CardContent className="relative z-10 p-4 sm:p-5">
+      <CardContent className="relative z-10 p-4 sm:p-5 z-10">
         <div className="ballpark-header mb-4">
           <h2 className="scoreboard-title text-2xl sm:text-3xl">
             {title}
@@ -490,7 +499,7 @@ export function BaseRunnersField({
             />
 
             {/* Center field marker */}
-            <text
+            {/* <text
               x="450"
               y="150"
               textAnchor="middle"
@@ -500,7 +509,7 @@ export function BaseRunnersField({
               letterSpacing="4"
             >
               CF
-            </text>
+            </text> */}
 
             {/* Light poles */}
             {/* <g>
@@ -566,18 +575,33 @@ export function BaseRunnersField({
               -translate-x-1/2 -translate-y-1/2
             "
           />
+             </div>
+
+             <div  className=" border-scoreboard-cream/40
+              absolute bottom-[10%] left-1/4 z-50
+              flex -translate-x-1/2 items-center
+              justify-center  font-heading
+              text-[18px] font-bold  scoreboard-number text-2xl scoreboard-label
+              
+            ">
+Outs: {outs ?? 0}
+</div>
 
           <div
             className="
-              absolute bottom-[5.5%] left-1/2 z-20
-              flex h-6 w-7 -translate-x-1/2 items-center
-              justify-center bg-scoreboard-cream font-heading
-              text-[9px] font-bold text-scoreboard-dark
-              [clip-path:polygon(0_0,100%_0,100%_58%,50%_100%,0_58%)]
+              absolute bottom-[10%] left-3/4 z-50
+              flex -translate-x-1/2 items-center
+              justify-center  font-heading
+              text-[18px] font-bold  scoreboard-number text-2xl scoreboard-label
+              
             "
           >
-            H
-          </div>
+            
+            <div>
+At Bat: {batter?.name ?? "—"}
+</div>
+
+
 
           {/* Legend */}
           {/* <div className="ballpark-legend absolute bottom-3 right-3 hidden space-y-2 sm:block">
@@ -592,7 +616,10 @@ export function BaseRunnersField({
             </div>
           </div> */}
         </div>
+
+        
       </CardContent>
+      
     </Card>
   )
 }

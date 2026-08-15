@@ -14,6 +14,13 @@ const outResults = [
     notationPrefix: "",
   },
   {
+  label: "Sac Bunt",
+  eventType: "sacrificeBunt",
+  battedBallType: "ground_ball",
+  defaultPutout: "1B",
+  notationPrefix: "",
+},
+  {
     label: "Flyout",
     eventType: "flyout",
     battedBallType: "fly_ball",
@@ -109,7 +116,9 @@ export function OutResultDialog({
   onCancel,
   onConfirm,
   bases = {},
+  defense = {},
 }) {
+  console.log("OUT RESULT DIALOG RENDERED")
   const [selectedResult, setSelectedResult] = useState(outResults[0])
   const [fieldedByPosition, setFieldedByPosition] = useState("SS")
   const [putoutPosition, setPutoutPosition] = useState("1B")
@@ -146,15 +155,41 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
       return next
     })
   }
+  function getFielderId(position) {
+    return defense?.[position] ?? null
+  }
 
+  function getFielderId(position) {
+    return defense?.[position] ?? null
+  }
   function submit() {
+    console.log("OUT RESULT SUBMIT FIRED")
     const isError =
       selectedResult.eventType === "error"
+      
   
     const isDoublePlay =
       selectedResult.eventType === "groundout" &&
       doublePlay
+
+      
   
+      const fieldedById =
+      getFielderId(fieldedByPosition)
+    
+    const putoutId =
+      getFielderId(
+        selectedResult.eventType === "groundout" ||
+        selectedResult.eventType === "fielders_choice"
+          ? putoutPosition
+          : fieldedByPosition
+      )
+    
+    const middleFielderId =
+      isDoublePlay
+        ? getFielderId(middlePosition)
+        : null
+      
     const details = createEventDetails({
       playType: selectedResult.eventType,
       result: selectedResult.eventType,
@@ -204,8 +239,47 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
         )
           ? runnerDecisions
           : null,
+
+          fielding: {
+            putouts: isError
+              ? []
+              : isDoublePlay
+                ? [
+                    middleFielderId,
+                    putoutId,
+                  ].filter(Boolean)
+                : [
+                    putoutId,
+                  ].filter(Boolean),
+          
+            assists: isError
+              ? []
+              : isDoublePlay
+                ? [
+                    fieldedById,
+                    middleFielderId,
+                  ].filter(Boolean)
+                : fieldedById !== putoutId
+                  ? [fieldedById].filter(Boolean)
+                  : [],
+          
+            errors: isError
+              ? [fieldedById].filter(Boolean)
+              : [],
+
+              
+          },
+    
     })
-  
+    console.log(
+      "DEFENSE PASSED TO DIALOG:",
+      defense
+    )
+    
+    console.log(
+      "FIELDING CREATED:",
+      details.fielding
+    )
     onConfirm({
       eventType: selectedResult.eventType,
   
@@ -235,6 +309,8 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
             ? 2
             : 1,
     })
+
+   
   }
 
   return (
@@ -260,6 +336,9 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
                 className="rounded-xl"
                 onClick={() => {
                   setSelectedResult(result)
+                
+                  setSacrifice(false)
+                  setRunnerDecisions({})
                 
                   if (result.eventType !== "groundout") {
                     setDoublePlay(false)
@@ -307,130 +386,177 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-  {positions.map((position) => (
-    <Button
-      key={position}
-      variant={
-        putoutPosition === position
-          ? "default"
-          : "secondary"
-      }
-      className="rounded-xl"
-      onClick={() =>
-        setPutoutPosition(position)
-      }
-    >
-      {position}
-    </Button>
-  ))}
-</div>
-
-{/* SACRIFICE BUNT */}
-<label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
-  <input
-    type="checkbox"
-    checked={sacrifice}
-    onChange={(event) =>
-      setSacrifice(event.target.checked)
-    }
-  />
-
-  <span className="font-medium">
-    Sacrifice Bunt
-  </span>
-</label>
-
-{sacrifice && bases.first && (
-  <div>
-    <div className="mb-2 font-bold">
-      {bases.first.name} on 1st
+        {positions.map((position) => (
+          <Button
+            key={position}
+            variant={
+              putoutPosition === position
+                ? "default"
+                : "secondary"
+            }
+            className="rounded-xl"
+            onClick={() =>
+              setPutoutPosition(position)
+            }
+          >
+            {position}
+          </Button>
+        ))}
+      </div>
     </div>
 
-    <div className="grid grid-cols-3 gap-2">
-      <Button
-        variant={
-          !runnerDecisions.first
-            ? "default"
-            : "secondary"
-        }
-        onClick={() =>
-          setRunnerDecision("first", "hold")
-        }
-      >
-        Hold
-      </Button>
+   
 
-      <Button
-        variant={
-          runnerDecisions.first === "second"
-            ? "default"
-            : "secondary"
-        }
-        onClick={() =>
-          setRunnerDecision("first", "second")
-        }
-      >
-        2nd
-      </Button>
+    {sacrifice && (
+      <div className="space-y-3">
+        {bases.first && (
+          <div>
+            <div className="mb-2 font-bold">
+              {bases.first.name} on 1st
+            </div>
 
-      <Button
-        variant={
-          runnerDecisions.first === "out"
-            ? "default"
-            : "secondary"
-        }
-        onClick={() =>
-          setRunnerDecision("first", "out")
-        }
-      >
-        Out
-      </Button>
-    </div>
-  </div>
-)}
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant={
+                  !runnerDecisions.first
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("first", "hold")
+                }
+              >
+                Hold
+              </Button>
 
-{/* DOUBLE PLAY */}
-<label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
-  <input
-    type="checkbox"
-    checked={doublePlay}
-    onChange={(event) =>
-      setDoublePlay(event.target.checked)
-    }
-  />
+              <Button
+                variant={
+                  runnerDecisions.first === "second"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("first", "second")
+                }
+              >
+                2nd
+              </Button>
 
-  <span className="font-medium">
-    Double play
-  </span>
-</label>
+              <Button
+                variant={
+                  runnerDecisions.first === "out"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("first", "out")
+                }
+              >
+                Out
+              </Button>
+            </div>
+          </div>
+        )}
 
-{doublePlay && (
-  <div>
-    <div className="mb-2 font-bold">
-      Relay / second-out connection
-    </div>
+        {bases.second && (
+          <div>
+            <div className="mb-2 font-bold">
+              {bases.second.name} on 2nd
+            </div>
 
-    <div className="grid grid-cols-3 gap-2">
-      {positions.map((position) => (
-        <Button
-          key={position}
-          variant={
-            middlePosition === position
-              ? "default"
-              : "secondary"
-          }
-          className="rounded-xl"
-          onClick={() =>
-            setMiddlePosition(position)
-          }
-        >
-          {position}
-        </Button>
-      ))}
-    </div>
-  </div>
-)}
-    </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant={
+                  !runnerDecisions.second
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("second", "hold")
+                }
+              >
+                Hold
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.second === "third"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("second", "third")
+                }
+              >
+                3rd
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.second === "out"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("second", "out")
+                }
+              >
+                Out
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {bases.third && (
+          <div>
+            <div className="mb-2 font-bold">
+              {bases.third.name} on 3rd
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              <Button
+                variant={
+                  !runnerDecisions.third
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("third", "hold")
+                }
+              >
+                Hold
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.third === "home"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("third", "home")
+                }
+              >
+                Home
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.third === "out"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision("third", "out")
+                }
+              >
+                Out
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
 
     <label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
       <input
@@ -442,7 +568,7 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
       />
 
       <span className="font-medium">
-        Double play
+        Double Play
       </span>
     </label>
 
@@ -558,20 +684,16 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
   </div>
 )}
 
-          <label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
-            <input
-              type="checkbox"
-              checked={sacrifice}
-              onChange={(e) => setSacrifice(e.target.checked)}
-            />
+        
+          
             {selectedResult.eventType === "flyout" && (
   <div className="space-y-4">
-    <label className="flex items-center gap-3 rounded-2xl bg-green-400 p-3">
+    <label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
       <input
         type="checkbox"
         checked={sacrifice}
-        onChange={(e) =>
-          setSacrifice(e.target.checked)
+        onChange={(event) =>
+          setSacrifice(event.target.checked)
         }
       />
 
@@ -620,7 +742,7 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
                 : "secondary"
             }
             onClick={() =>
-              setRunnerDecision ("third", "out")
+              setRunnerDecision("third", "out")
             }
           >
             Out
@@ -728,7 +850,7 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
     )}
   </div>
 )}
-          </label>
+         
 
           <div className="rounded-2xl bg-slate-100 p-3">
             <div className="text-sm text-slate-500">Scorebook notation</div>
@@ -740,9 +862,15 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
               Cancel
             </Button>
 
-            <Button className="rounded-2xl" onClick={submit}>
-              Confirm
-            </Button>
+            <Button
+  className="rounded-2xl"
+  onClick={() => {
+    console.log("CONFIRM BUTTON CLICKED")
+    submit()
+  }}
+>
+  Confirm
+</Button>
           </div>
         </CardContent>
       </Card>

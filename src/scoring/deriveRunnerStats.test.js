@@ -20,6 +20,7 @@ describe("deriveRunnerStats", () => {
         runs: 1,
         stolenBases: 0,
         caughtStealing: 0,
+        pickedOff: 0,
       },
     ]);
   });
@@ -63,12 +64,14 @@ describe("deriveRunnerStats", () => {
         runs: 1,
         stolenBases: 0,
         caughtStealing: 0,
+        pickedOff: 0,
       },
       {
         runnerId: "runner-2",
         runs: 1,
         stolenBases: 0,
         caughtStealing: 0,
+        pickedOff: 0,
       },
     ]);
   });
@@ -89,9 +92,10 @@ describe("deriveRunnerStats", () => {
     expect(result).toEqual([
       {
         runnerId: "runner-1",
-        runs: 0,
-        stolenBases: 1,
-        caughtStealing: 0,
+      runs: 0,
+      stolenBases: 1,
+      caughtStealing: 0,
+      pickedOff: 0,
       },
     ]);
   });
@@ -116,9 +120,35 @@ describe("deriveRunnerStats", () => {
         runs: 0,
         stolenBases: 0,
         caughtStealing: 1,
+        pickedOff: 0,
+      },
+    ])
+  })
+  it("credits picked off to a retired runner", () => {
+    const result = deriveRunnerStats({
+      playType: "pickoff",
+  
+      runnerAdvances: [
+        {
+          runnerId: "runner-1",
+          from: "first",
+          to: "out",
+          out: true,
+        },
+      ],
+    })
+  
+    expect(result).toEqual([
+      {
+        runnerId: "runner-1",
+        runs: 0,
+        stolenBases: 0,
+        caughtStealing: 0,
+        pickedOff: 1,
       },
     ])
   })
 
+  
   
 });

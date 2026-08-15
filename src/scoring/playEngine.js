@@ -126,6 +126,8 @@ export function applyPlay(gameState, playResult, context = {}) {
   playResult.playType === "flyOut" &&
   playResult.metadata?.sacrificeFly === true
 
+  
+
 const isRbiEligible =
   playDefinition.metadata?.rbiEligible === true ||
   isSacrificeFly

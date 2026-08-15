@@ -63,15 +63,44 @@ export async function getLatestGame() {
   return data
 }
 
-export async function createGame({ homeTeamId, awayTeamId }) {
+export async function createGame({
+  homeTeamId,
+  awayTeamId,
+  state,
+}) {
   const { data, error } = await supabase
     .from("games")
     .insert({
       home_team_id: homeTeamId,
       away_team_id: awayTeamId,
       status: "scoring",
+      state,
     })
     .select()
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+export async function getPublicGames() {
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .in("status", ["scoring", "final"])
+    .order("created_at", { ascending: false })
+
+  if (error) throw error
+
+  return data ?? []
+}
+
+export async function getGameById(gameId) {
+  const { data, error } = await supabase
+    .from("games")
+    .select("*")
+    .eq("id", gameId)
     .single()
 
   if (error) throw error

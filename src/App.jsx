@@ -1,20 +1,29 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
-import TapScorePrototype from "./components/GameOn"
+import { Routes, Route } from "react-router-dom";
+
+import "./App.css";
+
+import TapScorePrototype from "./components/GameOn";
+import { TeamScreen } from "./components/TeamScreen";
+import { TeamsScreen } from "./components/TeamsScreen";
+import { NewTeamScreen } from "./components/NewTeamScreen";
+import { FanHomeScreen } from "./components/FanHomePage";
+import { GameDetailScreen } from "./components/GameDetailScreen";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-     <TapScorePrototype/>
-    </>
-  )
+    <Routes>
+      <Route path="/" element={<TapScorePrototype />} />
+      <Route path="/teams" element={<TeamsScreen />} />
+      <Route path="/teams/new" element={<NewTeamScreen />} />
+      <Route path="/teams/:teamId" element={<TeamScreen />} />
+      <Route path="/stats" element={<statScreen />} />
+      <Route path="/fan" element={<FanHomeScreen />} />
+      <Route
+  path="/games/:gameId"
+  element={<GameDetailScreen />}
+/>
+    </Routes>
+  );
 }
 
-export default App
-
-
+export default App;

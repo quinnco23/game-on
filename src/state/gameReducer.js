@@ -17,30 +17,40 @@ import {
 export function gameReducer(state, action) {
   switch (action.type) {
     case "START_GAME": {
-      
-      const homeTeam = action.homeTeam || state.homeTeam;
-      const awayTeam = action.awayTeam || state.awayTeam;
+      const homeTeam = action.homeTeam || state.homeTeam
+      const awayTeam = action.awayTeam || state.awayTeam
+    
       return {
         ...state,
-  id: action.gameId,
-  history: [],
-  status: "scoring",
-  homeTeam,
-  awayTeam,
+    
+        id: action.gameId,
+        status: "scoring",
+    
+        homeTeam,
+        awayTeam,
+    
         score: {
           [homeTeam]: 0,
           [awayTeam]: 0,
         },
+    
         lineups: {
-          [homeTeam]: action.homeLineup,
-          [awayTeam]: action.awayLineup,
+          [homeTeam]: action.homeLineup ?? [],
+          [awayTeam]: action.awayLineup ?? [],
         },
+    
+        gameRoster: {
+          [homeTeam]: action.homeRoster ?? [],
+          [awayTeam]: action.awayRoster ?? [],
+        },
+    
         battingIndex: {
           [homeTeam]: 0,
           [awayTeam]: 0,
         },
+    
         stats: createEmptyGameStats(),
-      };
+      }
     }
 
     case "LOAD_GAME":
@@ -251,10 +261,165 @@ case "UNDO": {
     case "END_GAME":
       return { ...state, status: "summary" };
 
-    
+      case "SET_DEFENSIVE_POSITION": {
+        const {
+          team,
+          position,
+          playerId,
+        } = action
+      
+        return {
+          ...state,
+      
+          defense: {
+            ...state.defense,
+      
+            [team]: {
+              ...state.defense?.[team],
+      
+              [position]: playerId,
+            },
+          },
+        }
+      }
+      case "PITCH": {
+        const pitch = action.pitch
+      
+        let balls = state.balls ?? 0
+        let strikes = state.strikes ?? 0
+      
+        if (pitch.result === "ball") {
+          balls += 1
+        }
+      
+        if (
+          pitch.result === "calledStrike" ||
+          pitch.result === "swingingStrike"
+        ) {
+          strikes += 1
+        }
+      
+        if (pitch.result === "foul") {
+          if (strikes < 2) {
+            strikes += 1
+          }
+        }
+      
+        return {
+          ...state,
+      
+          balls,
+          strikes,
+      
+          pitchEvents: [
+            ...(state.pitchEvents ?? []),
+            pitch,
+          ],
+        }
+      }
+
+      case "CHANGE_PITCHER": {
+        const {
+          team,
+          playerId,
+        } = action
+      
+        const currentDefense = {
+          ...(state.defense?.[team] ?? {}),
+        }
+      
+        const oldPitcherId =
+          currentDefense.P ?? null
+      
+        // Find where the incoming pitcher is currently playing.
+        const incomingPlayerPosition =
+          Object.entries(currentDefense)
+            .find(
+              ([position, currentPlayerId]) =>
+                position !== "P" &&
+                currentPlayerId === playerId
+            )?.[0] ?? null
+      
+        // Put incoming player on the mound.
+        currentDefense.P = playerId
+      
+        // If incoming pitcher was already on the field,
+        // move the old pitcher into that vacated position.
+        if (
+          incomingPlayerPosition &&
+          oldPitcherId
+        ) {
+          currentDefense[incomingPlayerPosition] =
+            oldPitcherId
+        }
+      
+        const pitcherChange = {
+          id: crypto.randomUUID(),
+      
+          type: "pitcherChange",
+          team,
+      
+          playerInId: playerId,
+          playerOutId: oldPitcherId,
+      
+          fromPosition:
+            incomingPlayerPosition,
+      
+          oldPitcherNewPosition:
+            incomingPlayerPosition,
+      
+          inning: state.inning,
+          half: state.half,
+      
+          timestamp: Date.now(),
+        }
+      
+        return {
+          ...state,
+      
+          defense: {
+            ...state.defense,
+            [team]: currentDefense,
+          },
+      
+          substitutions: [
+            ...(state.substitutions ?? []),
+            pitcherChange,
+          ],
+        }
+      }
+
+      case "PITCH_EVENT": {
+        const nextStats =
+          accumulateGameStats(
+            state.stats,
+            {
+              pitcherId:
+                action.pitcherId,
+      
+              pitcherStats:
+                action.pitcherStats,
+            }
+          )
+      
+        return {
+          ...state,
+      
+          stats: nextStats,
+      
+          pitchEvents: [
+            ...(state.pitchEvents ?? []),
+            action.pitchEvent,
+          ],
+        }
+      }
+
+      
 
     default:
       return state;
   }
+
+  
 }
 

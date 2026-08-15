@@ -221,6 +221,20 @@ export const playTypes = {
       },
     },
 
+    pickoff: {
+      batterDestination: null,
+    
+      metadata: {
+        category: "runnerEvent",
+        resultType: "pickoff",
+    
+        isPlateAppearance: false,
+        endsPlateAppearance: false,
+        isAtBat: false,
+        isHit: false,
+      },
+    },
+
     
     
   };

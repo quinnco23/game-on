@@ -1,5 +1,28 @@
 // src/scoring/derivePitcherStats.js
 
+export function derivePitchCountStats(result) {
+  const strikeResults = new Set([
+    "calledStrike",
+    "swingingStrike",
+    "foul",
+    "inPlay",
+  ])
+
+  return {
+    pitches: 1,
+
+    strikes:
+      strikeResults.has(result)
+        ? 1
+        : 0,
+
+    balls:
+      result === "ball"
+        ? 1
+        : 0,
+  }
+}
+
 export function derivePitcherStats(metadata = {}) {
     const playType = metadata.playType;
     const playDefinition = metadata.playDefinition ?? {};
@@ -15,7 +38,15 @@ export function derivePitcherStats(metadata = {}) {
      * At the current engine stage, every completed play passed here
      * represents one completed batter appearance.
      */
-    const battersFaced = 1;
+    const isRunnerEvent =
+  playType === "pickoff" ||
+  playType === "stolenBase" ||
+  playType === "caughtStealing" ||
+  playType === "passedBall" ||
+  playType === "wildPitch";
+
+const battersFaced =
+  isRunnerEvent ? 0 : 1;
   
     /*
      * Runs are initially charged to the active pitcher.
@@ -40,12 +71,24 @@ export function derivePitcherStats(metadata = {}) {
         : isError
           ? 0
           : runsAllowed;
-  
+          const isPickoff =
+          playType === "pickoff";
+        
+        const isSuccessfulPickoff =
+          isPickoff &&
+          event.runnerOut === true;
+
+
     return {
       battersFaced,
   
       // Store innings pitched as actual outs.
       outsRecorded,
+      pickoffAttempts:
+  isPickoff ? 1 : 0,
+
+pickoffs:
+  isSuccessfulPickoff ? 1 : 0,
   
       hitsAllowed: isHit ? 1 : 0,
   
@@ -59,5 +102,7 @@ export function derivePitcherStats(metadata = {}) {
   
       runsAllowed,
       earnedRuns,
+
+
     };
   }

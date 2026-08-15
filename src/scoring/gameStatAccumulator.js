@@ -1,106 +1,100 @@
 function addStatDelta(current = {}, delta = {}) {
-    const next = {
-      ...current,
-    };
-  
-    for (const [statName, value] of Object.entries(delta)) {
-      if (typeof value !== "number") {
-        continue;
-      }
-  
-      next[statName] = (next[statName] ?? 0) + value;
+  const next = {
+    ...current,
+  }
+
+  for (const [statName, value] of Object.entries(delta)) {
+    if (typeof value !== "number") {
+      continue
     }
-  
-    return next;
+
+    next[statName] =
+      (next[statName] ?? 0) + value
   }
-  
-  export function createEmptyGameStats() {
-    return {
-      batters: {},
-      pitchers: {},
-      fielders: {},
-    };
+
+  return next
+}
+
+export function createEmptyGameStats() {
+  return {
+    batters: {},
+    pitchers: {},
+    fielders: {},
   }
-  export function accumulateGameStats(
-    currentStats,
-    {
-      batterId,
-      pitcherId,
-      batterStats,
-      pitcherStats,
-      fielderStats = [],
-      runnerStats = [],
-    } = {},
-  ) {
-    const existingStats =
-      currentStats ?? createEmptyGameStats();
-  
-    const nextStats = {
-      batters: {
-        ...(existingStats.batters ?? {}),
-      },
-  
-      pitchers: {
-        ...(existingStats.pitchers ?? {}),
-      },
-  
-      fielders: {
-        ...(existingStats.fielders ?? {}),
-      },
-    };
-  
-    if (batterId && batterStats) {
-      nextStats.batters[batterId] = addStatDelta(
+}
+
+export function accumulateGameStats(
+  currentStats,
+  {
+    batterId,
+    pitcherId,
+    batterStats,
+    pitcherStats,
+    fielderStats = [],
+    runnerStats = [],
+  } = {}
+) {
+  const existingStats =
+    currentStats ?? createEmptyGameStats()
+
+  const nextStats = {
+    batters: {
+      ...(existingStats.batters ?? {}),
+    },
+
+    pitchers: {
+      ...(existingStats.pitchers ?? {}),
+    },
+
+    fielders: {
+      ...(existingStats.fielders ?? {}),
+    },
+  }
+
+  if (batterId && batterStats) {
+    nextStats.batters[batterId] =
+      addStatDelta(
         nextStats.batters[batterId],
-        batterStats,
-      );
-    }
-
-    for (const runnerStat of runnerStats) {
-      const runnerId = runnerStat?.runnerId;
-    
-      if (!runnerId) {
-        continue;
-      }
-    
-      nextStats.batters[runnerId] = addStatDelta(
-        nextStats.batters[runnerId],
-        runnerStat,
-      );
-    }
-  
-    if (pitcherId && pitcherStats) {
-      nextStats.pitchers[pitcherId] = addStatDelta(
-        nextStats.pitchers[pitcherId],
-        pitcherStats,
-      );
-    }
-  
-    for (const fielderStat of fielderStats) {
-      const fielderId = fielderStat?.fielderId;
-  
-      if (!fielderId) {
-        continue;
-      }
-  
-      nextStats.fielders[fielderId] = addStatDelta(
-        nextStats.fielders[fielderId],
-        fielderStat,
-      );
-
-      for (const runnerStat of runnerStats) {
-        const runnerId = runnerStat?.runnerId;
-      
-        if (!runnerId) {
-          continue;
-        }
-      
-        nextStats.batters[runnerId] = addStatDelta(
-          nextStats.batters[runnerId],
-          runnerStat,
-        );
-      }
-    }
-  
-    return nextStats;
+        batterStats
+      )
   }
+
+  for (const runnerStat of runnerStats) {
+    const runnerId = runnerStat?.runnerId
+
+    if (!runnerId) {
+      continue
+    }
+
+    nextStats.batters[runnerId] =
+      addStatDelta(
+        nextStats.batters[runnerId],
+        runnerStat
+      )
+  }
+
+  if (pitcherId && pitcherStats) {
+    nextStats.pitchers[pitcherId] =
+      addStatDelta(
+        nextStats.pitchers[pitcherId],
+        pitcherStats
+      )
+  }
+
+  for (const fielderStat of fielderStats) {
+    const fielderId =
+      fielderStat?.fielderId
+
+    if (!fielderId) {
+      continue
+    }
+
+    nextStats.fielders[fielderId] =
+      addStatDelta(
+        nextStats.fielders[fielderId],
+        fielderStat
+      )
+  }
+
+  return nextStats
+}

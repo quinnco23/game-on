@@ -122,9 +122,18 @@ export function PlayResolutionDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-3 sm:items-center sm:p-4">
-  <Card className="w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-hidden rounded-t-3xl bg-green-950 text-slate-950 sm:rounded-3xl">
-    <CardContent className="flex max-h-[calc(100dvh-1.5rem)] flex-col p-0">
+    <div className="fixed inset-0 z-50 bg-black/70 md:p-4 md:flex md:items-center md:justify-center">
+  <Card   className="
+      h-[100dvh] w-full overflow-y-auto
+      rounded-none
+      bg-green-900 text-slate-950
+
+      md:h-auto
+      md:max-h-[90dvh]
+      md:max-w-md
+      md:rounded-3xl
+    ">
+    <CardContent className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-5">
       <div className="flex-1 overflow-y-auto p-5 pb-8 space-y-5">
         <div>
           <h2 className="text-xl font-bold">
@@ -136,7 +145,7 @@ export function PlayResolutionDialog({
           </p>
         </div>
 
-        <div className="rounded-2xl bg-green-300 p-3">
+        <div className="rounded-2xl ballpark-card p-3">
           <div className="text-sm text-slate-500">
             Batter
           </div>
@@ -181,7 +190,7 @@ export function PlayResolutionDialog({
               (advance, index) => (
                 <div
                   key={advance.runnerId}
-                  className="rounded-2xl bg-green-300 p-3"
+                  className="rounded-2xl ballpark-card p-3"
                 >
                   <div className="text-sm text-slate-500">
                     From {baseLabel(advance.from)}
@@ -215,7 +224,7 @@ export function PlayResolutionDialog({
           </div>
         )}
 
-        <div className="space-y-2 rounded-2xl bg-slate-100 p-3">
+        <div className="space-y-2 rounded-2xl ballpark-card p-3">
           <div className="flex items-center justify-between">
             <span className="font-bold">
               Runs scored
@@ -243,10 +252,11 @@ export function PlayResolutionDialog({
         </div>
       </div>
 
-      <div className="z-20 border-t border-slate-200 bg-white/95 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur">
+      <div className="z-20 border-t border-slate-200 ballpark-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur rounded-2xl">
         <div className="grid grid-cols-2 gap-3">
           <Button
-            variant="secondary"
+          
+            
             className="rounded-2xl"
             onClick={onCancel}
           >

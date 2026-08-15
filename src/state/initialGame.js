@@ -10,11 +10,12 @@ const emptyLineup = [
   { number: "11", name: "Cole", position: "RF" },
 ]
 
+
 export const initialGame = {
   status: "setup",
 
-  homeTeam: "Tigers",
-  awayTeam: "Lions",
+  homeTeam: " Team Name",
+  awayTeam: "Team Name",
 
   inning: 1,
   half: "top",
@@ -48,6 +49,8 @@ export const initialGame = {
     })),
   },
 
+  defense: {},
+
   battingIndex: {
     Tigers: 0,
     Lions: 0,
@@ -58,6 +61,8 @@ export const initialGame = {
     second: null,
     third: null,
   },
+
+  pitchEvents: [],
 
   events: [],
 }
