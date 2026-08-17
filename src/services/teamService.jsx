@@ -4,6 +4,7 @@ export async function getTeams() {
   const { data, error } = await supabase
     .from("teams")
     .select("*")
+    .eq("active", true)
     .order("name")
 
   if (error) throw error
@@ -19,6 +20,21 @@ export async function createTeam(name) {
     .insert({
       name: cleanName,
     })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+export async function deactivateTeam(teamId) {
+  const { data, error } = await supabase
+    .from("teams")
+    .update({
+      active: false,
+    })
+    .eq("id", teamId)
     .select()
     .single()
 

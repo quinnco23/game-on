@@ -87,7 +87,7 @@ const homeHits =
               className={[
                 "text-xs font-black uppercase tracking-wide",
                 isFinal
-                  ? "text-slate-600"
+                  ? "text-red-600"
                   : "text-red-600",
               ].join(" ")}
             >
@@ -182,7 +182,7 @@ const homeHits =
         {isFinal && (
           <div className="border-t border-slate-200 px-4 py-3">
             <div className="text-xs font-semibold text-slate-500">
-              {score.events.length} events
+              {/* {score.events.length} events */}
             </div>
           </div>
         )}

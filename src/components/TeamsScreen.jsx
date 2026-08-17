@@ -1,13 +1,42 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { getTeams } from "@/services/teamService"
+import { getTeams, createTeam, deactivateTeam } from "@/services/teamService"
 
 export function TeamsScreen() {
   const navigate = useNavigate()
 
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
+
+  async function handleDeactivateTeam(team) {
+    const confirmed = window.confirm(
+      `Deactivate ${team.name}?`
+    )
+  
+    if (!confirmed) return
+  
+    try {
+      await deactivateTeam(team.id)
+  
+      setTeams((current) =>
+        current.filter(
+          (currentTeam) =>
+            currentTeam.id !== team.id
+        )
+      )
+    } catch (error) {
+      console.error(
+        "Could not deactivate team:",
+        error
+      )
+  
+      alert(
+        error.message ||
+          "Could not deactivate team"
+      )
+    }
+  }
 
   async function loadTeams() {
     try {
@@ -84,6 +113,46 @@ export function TeamsScreen() {
             </button>
           ))
         )}
+
+{teams.map((team) => (
+  <div
+    key={team.id}
+    className="
+      flex
+      items-center
+      justify-between
+      border
+      border-scoreboard-cream/20
+      p-3
+    "
+  >
+    <button
+      type="button"
+      className="text-left"
+      onClick={() =>
+        navigate(`/teams/${team.id}`)
+      }
+    >
+      <div className="font-bold">
+        {team.name}
+      </div>
+    </button>
+
+    <button
+      type="button"
+      className="
+        text-xs
+        font-bold
+        text-scoreboard-red
+      "
+      onClick={() =>
+        handleDeactivateTeam(team)
+      }
+    >
+      Deactivate
+    </button>
+  </div>
+))}
       </section>
     </main>
   )

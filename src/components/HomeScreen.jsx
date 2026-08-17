@@ -30,46 +30,51 @@ function getFinalScore(game) {
   }
 }
 function getPlayerOfGame(game) {
-  const state = getSavedState(game)
-  const events = state.events || []
-  const lineups = state.lineups || {}
+  const state =
+    game?.state ??
+    game?.game_state ??
+    {}
 
-  const allPlayers = Object.values(lineups).flat()
-  const playerStats = {}
+  const lineups =
+    state.lineups ?? {}
 
-  for (const player of allPlayers) {
-    playerStats[player.id] = {
-      player,
-      hits: 0,
-      rbi: 0,
-    }
-  }
+  const batterStats =
+    state.stats?.batters ?? {}
 
-  for (const event of events) {
-    const playerId = event.player_id
-    if (!playerId || !playerStats[playerId]) continue
+  const allPlayers =
+    Object.values(lineups).flat()
 
-    if (["single", "double", "triple", "home_run"].includes(event.event_type)) {
-      playerStats[playerId].hits += 1
-    }
+  const ranked = allPlayers
+    .map((player) => {
+      const stats =
+        batterStats[player.id] ?? {}
 
-    playerStats[playerId].rbi += event.rbi || 0
-  }
+      return {
+        player,
+        hits: stats.hits ?? 0,
+        rbi: stats.rbi ?? 0,
+      }
+    })
+    .sort((a, b) => {
+      if (b.rbi !== a.rbi) {
+        return b.rbi - a.rbi
+      }
 
-  const ranked = Object.values(playerStats).sort((a, b) => {
-    if (b.rbi !== a.rbi) return b.rbi - a.rbi
-    return b.hits - a.hits
-  })
+      return b.hits - a.hits
+    })
 
   const top = ranked[0]
 
-  if (!top || (top.hits === 0 && top.rbi === 0)) {
+  if (
+    !top ||
+    (top.hits === 0 &&
+      top.rbi === 0)
+  ) {
     return null
   }
 
   return top
 }
-
 export function HomeScreen({
   activeGame,
   finishedGames = [],
@@ -103,7 +108,7 @@ export function HomeScreen({
           </h1>
 
           <button
-  className="scoreboard-button w-full"
+  className="scoreboard-button w-full mb-3.5"
   onClick={onTeams}
 >
   Teams & Rosters
@@ -237,21 +242,26 @@ function FinishedGameCard({ game, onClick }) {
       </div>
 
       {playerOfGame && (
-        <div className="mt-3 border-l-4 border-scoreboard-amber bg-scoreboard-dark/60 p-3">
-          <div className="scoreboard-label text-scoreboard-amber">
-            Player of the Game
-          </div>
-
-          <div className="mt-1 font-heading font-bold uppercase tracking-wide">
-            #{playerOfGame.player.number}{" "}
-            {playerOfGame.player.name}
-          </div>
-
-          <div className="scoreboard-label mt-1">
-            {playerOfGame.hits} H · {playerOfGame.rbi} RBI
-          </div>
-        </div>
-      )}
+  <div
+  className="mt-3 border-l-4 border-scoreboard-amber bg-scoreboard-dark/60 p-3">
+    <span className="scoreboard-label text-scoreboard-amber">
+      Player of the Game:
+    </span>{" "}
+    <div className="mt-1 font-heading font-bold uppercase tracking-wide">
+    #{playerOfGame.player.number || "—"}{" "}
+    {playerOfGame.player.name}
+    </div>
+    <span className="scoreboard-label mt-1">
+    {playerOfGame.hits} H ·{" "}
+    {playerOfGame.rbi} RBI
+    </span>
+  </div>
+)}
     </button>
   )
 }
+
+
+
+
+
