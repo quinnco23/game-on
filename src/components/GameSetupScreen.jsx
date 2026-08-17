@@ -80,11 +80,17 @@ async function handleHomeTeamChange(teamId) {
 }
 
 async function handleAwayTeamChange(teamId) {
+  if (teamId === awayTeamId) {
+    return
+  }
+
   setAwayTeamId(teamId)
+
+  // Only clear because this is genuinely a new team.
   setAwayLineup([])
+  setAwayRoster([])
 
   if (!teamId) {
-    setAwayRoster([])
     return
   }
 
@@ -110,7 +116,11 @@ const homeTeam =
     teams.find(
       (team) => team.id === awayTeamId
     )
-  
+    const canStartGame =
+    homeTeam &&
+    awayTeam &&
+    homeLineup.length > 0 &&
+    awayLineup.length > 0
 
   return (
     
@@ -205,10 +215,11 @@ const homeTeam =
 
       <div className="space-y-3 border-t-2 border-scoreboard-red pt-5">
       <Button
+      disabled={!canStartGame}
   className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
   onClick={async () => {
     console.log("START GAME BUTTON CLICKED")
-
+  
     console.log("SETUP STATE:", {
       homeTeam,
       awayTeam,
@@ -217,74 +228,113 @@ const homeTeam =
       homeRoster,
       awayRoster,
     })
-
+  
     try {
+      // Make sure both teams are selected
       if (!homeTeam || !awayTeam) {
         alert(
           "Select both a home and away team."
         )
         return
       }
-
+  
+      // Make sure both lineups exist
+      if (
+        homeLineup.length === 0 ||
+        awayLineup.length === 0
+      ) {
+        alert(
+          "Both teams need at least one player in the lineup."
+        )
+        return
+      }
+  
+      console.log("START LINEUPS:", {
+        home: homeLineup.map(
+          (player) => player.name
+        ),
+        away: awayLineup.map(
+          (player) => player.name
+        ),
+      })
+  
       console.log("ABOUT TO CREATE GAME")
-
+  
       const savedGame =
         await createGame({
           homeTeamId: homeTeam.id,
           awayTeamId: awayTeam.id,
         })
-
-      console.log(
-        "GAME CREATED:",
-        savedGame
-      )
-
-      console.log(
-        "HOME LINEUP BEFORE SAVE:",
-        homeLineup
-      )
-
-      console.log(
-        "AWAY LINEUP BEFORE SAVE:",
-        awayLineup
-      )
-
-      const savedHomeLineup =
-        await saveLineup({
-          gameId: savedGame.id,
-          teamId: homeTeam.id,
-          lineup: homeLineup,
+  
+        console.log("START LINEUPS:", {
+          home: homeLineup.map(
+            (player) => player.name
+          ),
+          away: awayLineup.map(
+            (player) => player.name
+          ),
         })
 
-      console.log(
-        "SAVED HOME LINEUP:",
-        savedHomeLineup
-      )
+console.log(
+  "GAME CREATED:",
+  savedGame
+)
 
-      const savedAwayLineup =
-        await saveLineup({
-          gameId: savedGame.id,
-          teamId: awayTeam.id,
-          lineup: awayLineup,
-        })
+console.log(
+  "HOME LINEUP BEFORE SAVE:",
+  homeLineup
+)
 
-      console.log(
-        "SAVED AWAY LINEUP:",
-        savedAwayLineup
-      )
+console.log(
+  "AWAY LINEUP BEFORE SAVE:",
+  awayLineup
+)
 
-      onStart({
-        gameId: savedGame.id,
+console.time("SAVE BOTH LINEUPS")
 
-        homeTeam: homeTeam.name,
-        awayTeam: awayTeam.name,
+const [
+  savedHomeLineup,
+  savedAwayLineup,
+] = await Promise.all([
+  saveLineup({
+    gameId: savedGame.id,
+    teamId: homeTeam.id,
+    lineup: homeLineup,
+  }),
 
-        homeLineup: savedHomeLineup,
-        awayLineup: savedAwayLineup,
+  saveLineup({
+    gameId: savedGame.id,
+    teamId: awayTeam.id,
+    lineup: awayLineup,
+  }),
+])
 
-        homeRoster,
-        awayRoster,
-      })
+console.timeEnd("SAVE BOTH LINEUPS")
+
+console.log(
+  "SAVED HOME LINEUP:",
+  savedHomeLineup
+)
+
+console.log(
+  "SAVED AWAY LINEUP:",
+  savedAwayLineup
+)
+
+console.timeEnd("START GAME TOTAL")
+
+onStart({
+  gameId: savedGame.id,
+
+  homeTeam: homeTeam.name,
+  awayTeam: awayTeam.name,
+
+  homeLineup: savedHomeLineup,
+  awayLineup: savedAwayLineup,
+
+  homeRoster,
+  awayRoster,
+})
     } catch (error) {
       console.error(
         "Could not start game:",

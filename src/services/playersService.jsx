@@ -7,43 +7,49 @@ export async function saveLineup({
   teamId,
   lineup,
 }) {
-  const savedPlayers = []
+  const validPlayers =
+    (lineup ?? []).filter(
+      (player) =>
+        player.id &&
+        player.name?.trim()
+    )
 
-  for (let index = 0; index < lineup.length; index++) {
-    const player = lineup[index]
-
-    if (!player.name?.trim()) continue
-
-    const savedPlayer = await findOrCreatePlayer({
-      teamId,
-      name: player.name,
-      number: player.number,
-      position: player.position,
-    })
-
-    const { error: gamePlayerError } = await supabase
-      .from("game_players")
-      .insert({
-        game_id: gameId,
-        team_id: teamId,
-        player_id: savedPlayer.id,
-        batting_order: index + 1,
-        position: player.position,
-        is_starter: true,
-      })
-
-    if (gamePlayerError) throw gamePlayerError
-
-    savedPlayers.push({
-      id: savedPlayer.id,
-      number: savedPlayer.number,
-      name: savedPlayer.name,
-      position: player.position,
-      battingOrder: index + 1,
-    })
+  if (validPlayers.length === 0) {
+    return []
   }
 
-  return savedPlayers
+  const rows = validPlayers.map(
+    (player, index) => ({
+      game_id: gameId,
+      team_id: teamId,
+      player_id: player.id,
+      batting_order: index + 1,
+      position:
+        player.position ??
+        player.default_position ??
+        null,
+      is_starter: true,
+    })
+  )
+
+  const { error } = await supabase
+    .from("game_players")
+    .insert(rows)
+
+  if (error) throw error
+
+  return validPlayers.map(
+    (player, index) => ({
+      id: player.id,
+      number: player.number,
+      name: player.name,
+      position:
+        player.position ??
+        player.default_position ??
+        "",
+      battingOrder: index + 1,
+    })
+  )
 }
 export async function loadGameLineup({ gameId, teamId }) {
   const { data, error } = await supabase

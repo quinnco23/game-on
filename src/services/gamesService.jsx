@@ -115,6 +115,8 @@ export async function getUpcomingGames() {
       id,
       status,
       scheduled_at,
+      venue,
+      field_name,
       home_team_id,
       away_team_id,
 
@@ -146,14 +148,21 @@ export async function scheduleGame({
   homeTeamId,
   awayTeamId,
   scheduledAt,
+  venue,
+  fieldName,
 }) {
   const { data, error } = await supabase
     .from("games")
     .insert({
       home_team_id: homeTeamId,
       away_team_id: awayTeamId,
+
       status: "scheduled",
       scheduled_at: scheduledAt,
+
+      venue: venue?.trim() || null,
+      field_name:
+        fieldName?.trim() || null,
     })
     .select()
     .single()

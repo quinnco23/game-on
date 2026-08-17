@@ -26,6 +26,12 @@ export function ScheduleGameScreen() {
     const [upcomingGames, setUpcomingGames] =
   useState([])
 
+  const [venue, setVenue] =
+  useState("")
+
+const [fieldName, setFieldName] =
+  useState("")
+
   async function loadUpcomingGames() {
     try {
       const result =
@@ -91,10 +97,14 @@ export function ScheduleGameScreen() {
       await scheduleGame({
         homeTeamId,
         awayTeamId,
+  
         scheduledAt:
           new Date(
             scheduledAt
           ).toISOString(),
+  
+        venue,
+        fieldName,
       })
   
       await loadUpcomingGames()
@@ -102,6 +112,9 @@ export function ScheduleGameScreen() {
       setHomeTeamId("")
       setAwayTeamId("")
       setScheduledAt("")
+      setVenue("")
+      setFieldName("")
+  
     } catch (error) {
       console.error(
         "Could not schedule game:",
@@ -194,15 +207,40 @@ export function ScheduleGameScreen() {
             </option>
           ))}
         </select>
-
         <input
-          type="datetime-local"
-          className="scoreboard-input w-full"
-          value={scheduledAt}
-          onChange={(e) =>
-            setScheduledAt(e.target.value)
-          }
-        />
+  type="datetime-local"
+  className="
+    scoreboard-input
+    w-full
+    bg-scoreboard-cream
+    text-scoreboard-dark
+    [color-scheme:light]
+  "
+  value={scheduledAt}
+  onChange={(e) =>
+    setScheduledAt(e.target.value)
+  }
+/>
+
+<input
+  type="text"
+  className="scoreboard-input w-full"
+  placeholder="Venue / Park"
+  value={venue}
+  onChange={(e) =>
+    setVenue(e.target.value)
+  }
+/>
+
+<input
+  type="text"
+  className="scoreboard-input w-full"
+  placeholder="Field (optional)"
+  value={fieldName}
+  onChange={(e) =>
+    setFieldName(e.target.value)
+  }
+/>
 
         <button
           type="button"
