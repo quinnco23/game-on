@@ -237,6 +237,7 @@ const [scheduledTime, setScheduledTime] =
           items-center
           text-base
           text-scoreboard-cream/50
+          sm:hidden
         ">
           Select date
         </span>
@@ -279,6 +280,7 @@ const [scheduledTime, setScheduledTime] =
           items-center
           text-base
           text-scoreboard-cream/50
+          sm:hidden
         ">
           Select time
         </span>

@@ -52,7 +52,14 @@ export async function savePitchEvent({
     .select()
     .single()
 
-  if (error) throw error
+  if (error) {
+    console.error(
+      "Could not save pitch event:",
+      error
+    )
+
+    throw error
+  }
 
   return data
 }
@@ -68,7 +75,14 @@ export async function getGamePitchEvents(
       ascending: true,
     })
 
-  if (error) throw error
+  if (error) {
+    console.error(
+      "Could not load pitch events:",
+      error
+    )
+
+    throw error
+  }
 
   return data ?? []
 }

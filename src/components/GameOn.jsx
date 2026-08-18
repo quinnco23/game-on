@@ -945,21 +945,34 @@ const currentPitchCount =
   }
 
   async function handlePitch(result) {
+
+ 
+      console.log("HANDLE PITCH FIRED:", result)
+      
+    
+    
     const batter =
       getCurrentBatter(game)
   
-    const pitcherId =
-      currentPitcherId
+    const activeDefensiveSide =
+      game.half === "top"
+        ? "home"
+        : "away"
   
-    const existingPitchEvents =
-      game.pitchEvents ?? []
-  
-    const sequence =
-      existingPitchEvents.length + 1
+    const activePitcherId =
+      game.defense?.[activeDefensiveSide]?.P ??
+      defensiveAlignment?.P ??
+      null
+
+      console.log(
+        "PITCHER BEING SAVED:",
+        activePitcherId
+      )
+    
   
     const pitchEvent =
       createPitchEvent({
-        pitcherId,
+        pitcherId: activePitcherId,
         batterId:
           batter?.id ?? null,
         result,
@@ -970,19 +983,13 @@ const currentPitchCount =
     const pitchStats =
       derivePitchCountStats(result)
   
-    /*
-     * Update the UI immediately.
-     */
     dispatch({
       type: "PITCH_EVENT",
       pitchEvent,
-      pitcherId,
+      pitcherId: activePitcherId,
       pitcherStats: pitchStats,
     })
   
-    /*
-     * Persist the same pitch event.
-     */
     try {
       await savePitchEvent({
         id: pitchEvent.id,
@@ -991,12 +998,14 @@ const currentPitchCount =
           game.gameId ??
           game.id,
   
-        pitcherId,
+        pitcherId:
+          activePitcherId,
   
         batterId:
           batter?.id ?? null,
   
-        sequence,
+        sequence:
+          (game.pitchEvents?.length ?? 0) + 1,
   
         inning:
           game.inning ?? 1,
@@ -1014,7 +1023,6 @@ const currentPitchCount =
           game.outs ?? 0,
   
         result,
-  
         source: "manual",
       })
     } catch (error) {
@@ -1269,7 +1277,6 @@ const currentPitchCount =
 
   onInPlay={() => {
     handlePitch(PITCH_RESULTS.IN_PLAY)
-
     setPendingHitType("inPlay")
   }}
 
