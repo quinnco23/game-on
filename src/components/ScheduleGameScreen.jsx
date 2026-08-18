@@ -226,23 +226,24 @@ const [scheduledTime, setScheduledTime] =
     </span>
 
     <input
-      type="date"
-      className="
-        w-full
-        rounded-none
-        border
-        border-scoreboard-cream/30
-        bg-scoreboard-cream
-        px-3 py-3
-        text-base
-        text-slate-900
-        [color-scheme:light]
-      "
-      value={scheduledDate}
-      onChange={(e) =>
-        setScheduledDate(e.target.value)
-      }
-    />
+  type="date"
+  className="
+    w-full
+    h-[52px]
+    rounded-none
+    border
+    border-scoreboard-cream/30
+    bg-transparent
+    px-3
+    text-base
+    text-scoreboard-cream
+    [color-scheme:dark]
+    appearance-none
+    [&::-webkit-date-and-time-value]:text-left
+  "
+  value={scheduledDate}
+  onChange={(e) => setScheduledDate(e.target.value)}
+/>
   </label>
 
   <label className="block space-y-2">
@@ -251,23 +252,24 @@ const [scheduledTime, setScheduledTime] =
     </span>
 
     <input
-      type="time"
-      className="
-        w-full
-        rounded-none
-        border
-        border-scoreboard-cream/30
-        bg-scoreboard-cream
-        px-3 py-3
-        text-base
-        text-slate-900
-        [color-scheme:light]
-      "
-      value={scheduledTime}
-      onChange={(e) =>
-        setScheduledTime(e.target.value)
-      }
-    />
+  type="time"
+  className="
+    w-full
+    h-[52px]
+    rounded-none
+    border
+    border-scoreboard-cream/30
+    bg-transparent
+    px-3
+    text-base
+    text-scoreboard-cream
+    [color-scheme:dark]
+    appearance-none
+    [&::-webkit-date-and-time-value]:text-left
+  "
+  value={scheduledTime}
+  onChange={(e) => setScheduledTime(e.target.value)}
+/>
   </label>
 </div>
 
