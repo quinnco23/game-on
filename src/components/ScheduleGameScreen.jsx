@@ -219,57 +219,89 @@ const [scheduledTime, setScheduledTime] =
             </option>
           ))}
         </select>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
+  {/* DATE */}
   <label className="block space-y-2">
     <span className="scoreboard-label">
       Date
     </span>
 
-    <input
-  type="date"
-  className="
-    w-full
-    h-[52px]
-    rounded-none
-    border
-    border-scoreboard-cream/30
-    bg-transparent
-    px-3
-    text-base
-    text-scoreboard-cream
-    [color-scheme:dark]
-    appearance-none
-    [&::-webkit-date-and-time-value]:text-left
-  "
-  value={scheduledDate}
-  onChange={(e) => setScheduledDate(e.target.value)}
-/>
+    <div className="relative">
+      {!scheduledDate && (
+        <span className="
+          pointer-events-none
+          absolute
+          inset-y-0
+          left-3
+          flex
+          items-center
+          text-base
+          text-scoreboard-cream/50
+        ">
+          Select date
+        </span>
+      )}
+
+      <input
+        type="date"
+        className="
+          w-full
+          h-[52px]
+          rounded-none
+          border
+          border-scoreboard-cream/30
+          bg-transparent
+          px-3
+          text-base
+          text-scoreboard-cream
+          [color-scheme:dark]
+        "
+        value={scheduledDate}
+        onChange={(e) => setScheduledDate(e.target.value)}
+      />
+    </div>
   </label>
 
+  {/* TIME */}
   <label className="block space-y-2">
     <span className="scoreboard-label">
       Time
     </span>
 
-    <input
-  type="time"
-  className="
-    w-full
-    h-[52px]
-    rounded-none
-    border
-    border-scoreboard-cream/30
-    bg-transparent
-    px-3
-    text-base
-    text-scoreboard-cream
-    [color-scheme:dark]
-    appearance-none
-    [&::-webkit-date-and-time-value]:text-left
-  "
-  value={scheduledTime}
-  onChange={(e) => setScheduledTime(e.target.value)}
-/>
+    <div className="relative">
+      {!scheduledTime && (
+        <span className="
+          pointer-events-none
+          absolute
+          inset-y-0
+          left-3
+          flex
+          items-center
+          text-base
+          text-scoreboard-cream/50
+        ">
+          Select time
+        </span>
+      )}
+
+      <input
+        type="time"
+        className="
+          w-full
+          h-[52px]
+          rounded-none
+          border
+          border-scoreboard-cream/30
+          bg-transparent
+          px-3
+          text-base
+          text-scoreboard-cream
+          [color-scheme:dark]
+        "
+        value={scheduledTime}
+        onChange={(e) => setScheduledTime(e.target.value)}
+      />
+    </div>
   </label>
 </div>
 
