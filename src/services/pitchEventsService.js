@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase"
 
 export async function savePitchEvent({
+  id,
   gameId,
   pitcherId,
   batterId,
@@ -17,17 +18,13 @@ export async function savePitchEvent({
   plateZ = null,
   velocityMph = null,
   confidence = null,
-
-  absCall = null,
-  scorerCall = null,
-  finalCall = null,
-
   modelVersion = null,
-  calibrationId = null,
 }) {
   const { data, error } = await supabase
     .from("pitch_events")
     .insert({
+      id,
+
       game_id: gameId,
 
       pitcher_id: pitcherId,
@@ -50,12 +47,7 @@ export async function savePitchEvent({
       velocity_mph: velocityMph,
       confidence,
 
-      abs_call: absCall,
-      scorer_call: scorerCall,
-      final_call: finalCall,
-
       model_version: modelVersion,
-      calibration_id: calibrationId,
     })
     .select()
     .single()
@@ -63,4 +55,20 @@ export async function savePitchEvent({
   if (error) throw error
 
   return data
+}
+
+export async function getGamePitchEvents(
+  gameId
+) {
+  const { data, error } = await supabase
+    .from("pitch_events")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("sequence", {
+      ascending: true,
+    })
+
+  if (error) throw error
+
+  return data ?? []
 }

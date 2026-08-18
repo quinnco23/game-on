@@ -42,6 +42,7 @@ import {
 } from "../scoring/pitchEvent"
 import { TeamScreen } from "./TeamScreen";
 import { useNavigate } from "react-router-dom"
+import { savePitchEvent } from "@/services/pitchEventsService";
 
 import {
   derivePitchCountStats,
@@ -943,32 +944,85 @@ const currentPitchCount =
     }
   }
 
-  function handlePitch(result) {
-    const batter = getCurrentBatter(game)
+  async function handlePitch(result) {
+    const batter =
+      getCurrentBatter(game)
   
     const pitcherId =
       currentPitcherId
   
-    const pitchEvent = createPitchEvent({
-      pitcherId,
-      batterId: batter?.id ?? null,
-      result,
-      inning: game.inning,
-      half: game.half,
-    })
+    const existingPitchEvents =
+      game.pitchEvents ?? []
+  
+    const sequence =
+      existingPitchEvents.length + 1
+  
+    const pitchEvent =
+      createPitchEvent({
+        pitcherId,
+        batterId:
+          batter?.id ?? null,
+        result,
+        inning: game.inning,
+        half: game.half,
+      })
   
     const pitchStats =
       derivePitchCountStats(result)
   
-    console.log("PITCH EVENT:", pitchEvent)
-    console.log("PITCH STATS:", pitchStats)
-  
+    /*
+     * Update the UI immediately.
+     */
     dispatch({
       type: "PITCH_EVENT",
       pitchEvent,
       pitcherId,
       pitcherStats: pitchStats,
     })
+  
+    /*
+     * Persist the same pitch event.
+     */
+    try {
+      await savePitchEvent({
+        id: pitchEvent.id,
+  
+        gameId:
+          game.gameId ??
+          game.id,
+  
+        pitcherId,
+  
+        batterId:
+          batter?.id ?? null,
+  
+        sequence,
+  
+        inning:
+          game.inning ?? 1,
+  
+        half:
+          game.half ?? "top",
+  
+        ballsBefore:
+          game.balls ?? 0,
+  
+        strikesBefore:
+          game.strikes ?? 0,
+  
+        outsBefore:
+          game.outs ?? 0,
+  
+        result,
+  
+        source: "manual",
+      })
+    } catch (error) {
+      console.error(
+        "Could not persist pitch:",
+        error
+      )
+    }
   }
 
 

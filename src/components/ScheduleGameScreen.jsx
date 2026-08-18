@@ -17,11 +17,7 @@ export function ScheduleGameScreen() {
   const [awayTeamId, setAwayTeamId] =
     useState("")
 
-  const [scheduledAt, setScheduledAt] =
-    useState("")
-
-    const [editingGame, setEditingGame] =
-    useState(null)
+  
 
     const [upcomingGames, setUpcomingGames] =
   useState([])
@@ -30,6 +26,12 @@ export function ScheduleGameScreen() {
   useState("")
 
 const [fieldName, setFieldName] =
+  useState("")
+
+  const [scheduledDate, setScheduledDate] =
+  useState("")
+
+const [scheduledTime, setScheduledTime] =
   useState("")
 
   async function loadUpcomingGames() {
@@ -77,10 +79,20 @@ const [fieldName, setFieldName] =
   }, [])
 
   async function handleSchedule() {
+    console.log("SCHEDULE FORM:", {
+      homeTeamId,
+      awayTeamId,
+      scheduledDate,
+      scheduledTime,
+      venue,
+      fieldName,
+    })
+  
     if (
       !homeTeamId ||
       !awayTeamId ||
-      !scheduledAt
+      !scheduledDate ||
+      !scheduledTime
     ) {
       alert("Complete all fields.")
       return
@@ -94,15 +106,15 @@ const [fieldName, setFieldName] =
     }
   
     try {
+      const scheduledAt =
+        new Date(
+          `${scheduledDate}T${scheduledTime}`
+        ).toISOString()
+  
       await scheduleGame({
         homeTeamId,
         awayTeamId,
-  
-        scheduledAt:
-          new Date(
-            scheduledAt
-          ).toISOString(),
-  
+        scheduledAt,
         venue,
         fieldName,
       })
@@ -111,10 +123,10 @@ const [fieldName, setFieldName] =
   
       setHomeTeamId("")
       setAwayTeamId("")
-      setScheduledAt("")
+      setScheduledDate("")
+      setScheduledTime("")
       setVenue("")
       setFieldName("")
-  
     } catch (error) {
       console.error(
         "Could not schedule game:",
@@ -207,20 +219,57 @@ const [fieldName, setFieldName] =
             </option>
           ))}
         </select>
-        <input
-  type="datetime-local"
-  className="
-    scoreboard-input
-    w-full
-    bg-scoreboard-cream
-    text-scoreboard-dark
-    [color-scheme:light]
-  "
-  value={scheduledAt}
-  onChange={(e) =>
-    setScheduledAt(e.target.value)
-  }
-/>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+  <label className="block space-y-2">
+    <span className="scoreboard-label">
+      Date
+    </span>
+
+    <input
+      type="date"
+      className="
+        w-full
+        rounded-none
+        border
+        border-scoreboard-cream/30
+        bg-scoreboard-cream
+        px-3 py-3
+        text-base
+        text-slate-900
+        [color-scheme:light]
+      "
+      value={scheduledDate}
+      onChange={(e) =>
+        setScheduledDate(e.target.value)
+      }
+    />
+  </label>
+
+  <label className="block space-y-2">
+    <span className="scoreboard-label">
+      Time
+    </span>
+
+    <input
+      type="time"
+      className="
+        w-full
+        rounded-none
+        border
+        border-scoreboard-cream/30
+        bg-scoreboard-cream
+        px-3 py-3
+        text-base
+        text-slate-900
+        [color-scheme:light]
+      "
+      value={scheduledTime}
+      onChange={(e) =>
+        setScheduledTime(e.target.value)
+      }
+    />
+  </label>
+</div>
 
 <input
   type="text"
