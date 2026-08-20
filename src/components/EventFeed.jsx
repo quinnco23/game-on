@@ -7,7 +7,7 @@ export function EventFeed({ events = [] }) {
     () => [...events].slice(-5).reverse(),
     [events]
   );
-
+  console.log("GAME FEED EVENTS:", latest)
   return (
     <Card className="rounded-3xl bg-white/10 border-white/10 text-white">
       <CardContent className="p-5 space-y-3">

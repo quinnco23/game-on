@@ -1,4 +1,9 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from "react"
 
 import { gameReducer } from "../state/gameReducer";
 import { initialGame } from "../state/initialGame";
@@ -49,40 +54,51 @@ import {
   
 } from "../scoring/pitchEvent"
 
-function FieldBase({ runner, label, className = "" }) {
-  const occupied = Boolean(runner);
+// function FieldBase({ runner, label, className = "" }) {
+//   const occupied = Boolean(runner);
 
 
-  return (
-    <div className={className}>
-      <div
-        className={[
-          "ballpark-base",
-          occupied ? "ballpark-base-occupied" : "ballpark-base-empty",
-        ].join(" ")}
-        title={
-          occupied ? `${runner.name || "Runner"} on ${label}` : `${label} empty`
-        }
-      >
-        <span className="ballpark-base-label">{label}</span>
-      </div>
+//   return (
+//     <div className={className}>
+//       <div
+//         className={[
+//           "ballpark-base",
+//           occupied ? "ballpark-base-occupied" : "ballpark-base-empty",
+//         ].join(" ")}
+//         title={
+//           occupied ? `${runner.name || "Runner"} on ${label}` : `${label} empty`
+//         }
+//       >
+//         <span className="ballpark-base-label">{label}</span>
+//       </div>
 
-      {occupied && (
-        <div
-          className="
-            absolute left-1/2 top-10 w-24 -translate-x-1/2
-            truncate text-center font-heading text-[9px]
-            font-bold uppercase tracking-wide text-scoreboard-cream
-          "
-        >
-          {runner.name}
-        </div>
-      )}
-    </div>
-  );
+//       {occupied && (
+//         <div
+//           className="
+//             absolute left-1/2 top-10 w-24 -translate-x-1/2
+//             truncate text-center font-heading text-[9px]
+//             font-bold uppercase tracking-wide text-scoreboard-cream
+//           "
+//         >
+//           {runner.name}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+function createPersistedGameSnapshot(game) {
+  return {
+    ...game,
+
+    // These live in their own tables
+    pitchEvents: [],
+    events: [],
+
+    // Never persist the in-memory undo stack
+    history: [],
+  }
 }
-
-
    
 export default function TapScorePrototype() {
   const [game, dispatch] = useReducer(gameReducer, initialGame);
@@ -119,6 +135,12 @@ export default function TapScorePrototype() {
   const [selectedTeam, setSelectedTeam] =
   useState(null)
   const navigate = useNavigate()
+
+  const saveInFlightRef =
+  useRef(false)
+
+const pendingGameRef =
+  useRef(null)
 
   // useEffect(() => {
   //   const result = resolveRunnerMovement({
@@ -177,8 +199,8 @@ const defensiveTeamName =
     : derivedDefense
 
 
-const currentPitcherId =
-  game.defense?.[defensiveSide]?.P ?? null
+    const currentPitcherId =
+    defensiveAlignment?.P ?? null
 
 const currentPitcher =
   game.gameRoster?.[defensiveTeamName]
@@ -186,11 +208,7 @@ const currentPitcher =
       (player) =>
         player.id === currentPitcherId
     ) ?? null
-    const currentPitcherStats =
-    game.stats?.pitchers?.[currentPitcherId] ?? {}
-  
-  const pitchCount =
-    currentPitcherStats.pitches ?? 0
+   
     
    
 
@@ -198,32 +216,70 @@ const currentPitcher =
   
  
     
-      useEffect(() => {
-        if (
-          !game.id ||
-          game.status !== "scoring"
-        ) {
-          return
-        }
-      
-        async function persistGame() {
+    useEffect(() => {
+      if (
+        !game.id ||
+        game.status !== "scoring"
+      ) {
+        return
+      }
+    
+      pendingGameRef.current =
+        game
+    
+      const timeoutId =
+        setTimeout(async () => {
+          if (saveInFlightRef.current) {
+            return
+          }
+    
+          saveInFlightRef.current =
+            true
+    
           try {
-            const savedGame = await updateGameState(
-              game.id,
-              game
+            while (
+              pendingGameRef.current
+            ) {
+              const gameToSave =
+                pendingGameRef.current
+    
+              pendingGameRef.current =
+                null
+    
+              console.time(
+                "GAME SNAPSHOT SAVE"
+              )
+    
+              const snapshot =
+              createPersistedGameSnapshot(
+                gameToSave
+              )
+            
+            await updateGameState(
+              snapshot.id,
+              snapshot
             )
-      
-            setActiveGame(savedGame)
+    
+              console.timeEnd(
+                "GAME SNAPSHOT SAVE"
+              )
+            }
           } catch (error) {
             console.error(
               "Could not persist game state:",
               error
             )
+          } finally {
+            saveInFlightRef.current =
+              false
           }
-        }
-      
-        persistGame()
-      }, [game])
+        }, 400)
+    
+      return () => {
+        clearTimeout(timeoutId)
+      }
+    }, [game])
+
       useEffect(() => {
         async function loadHomeData() {
           try {
@@ -248,11 +304,16 @@ const currentPitcher =
       }, []);
 
     
-const currentPitchCount =
-  (game.pitchEvents ?? []).filter(
-    (pitch) =>
-      pitch.pitcherId === currentPitcherId
-  ).length
+      const currentPitchCount =
+      currentPitcherId
+        ? (game.pitchEvents ?? []).filter(
+            (pitch) =>
+              (
+                pitch.pitcherId ??
+                pitch.pitcher_id
+              ) === currentPitcherId
+          ).length
+        : 0
 
   if (loading) {
     return (
@@ -269,6 +330,21 @@ const currentPitchCount =
       </div>
     )
   }
+
+  console.log("PITCH COUNT DEBUG:", {
+    currentPitcherId,
+    currentPitchCount,
+  
+    pitchEvents:
+      (game.pitchEvents ?? []).map(
+        (pitch) => ({
+          id: pitch.id,
+          pitcherId: pitch.pitcherId,
+          pitcher_id: pitch.pitcher_id,
+          result: pitch.result,
+        })
+      ),
+  })
 
   if (screen === "home") {
     return (
@@ -944,15 +1020,33 @@ const currentPitchCount =
     }
   }
 
-  async function handlePitch(result) {
+  
 
- 
-      console.log("HANDLE PITCH FIRED:", result)
-      
-    
-    
+  async function handlePitch(result) {
+    console.log(
+      "HANDLE PITCH FIRED:",
+      result
+    )
+
+    if (
+      !game.gameClock?.startedAt
+    ) {
+      dispatch({
+        type: "START_GAME_CLOCK",
+        startedAt:
+          new Date().toISOString(),
+      })
+    }
+  
     const batter =
       getCurrentBatter(game)
+  
+    const label =
+      getPitchLabel(
+        result,
+        game,
+        batter
+      )
   
     const activeDefensiveSide =
       game.half === "top"
@@ -970,15 +1064,38 @@ const currentPitchCount =
       )
     
   
-    const pitchEvent =
-      createPitchEvent({
-        pitcherId: activePitcherId,
-        batterId:
-          batter?.id ?? null,
-        result,
-        inning: game.inning,
-        half: game.half,
-      })
+      const pitchEvent = {
+        ...createPitchEvent({
+          pitcherId: activePitcherId,
+      
+          batterId:
+            batter?.id ?? null,
+      
+          result,
+      
+          inning:
+            game.inning,
+      
+          half:
+            game.half,
+        }),
+      
+        label,
+      
+        batter: batter
+          ? {
+              id: batter.id,
+              number: batter.number,
+              name: batter.name,
+            }
+          : null,
+      
+        ballsBefore:
+          game.balls ?? 0,
+      
+        strikesBefore:
+          game.strikes ?? 0,
+      }
   
     const pitchStats =
       derivePitchCountStats(result)
@@ -1033,7 +1150,51 @@ const currentPitchCount =
     }
   }
 
-
+  function getPitchLabel(result, game, batter) {
+    const number =
+      batter?.number
+        ? `#${batter.number} `
+        : ""
+  
+    const name =
+      batter?.name ?? "Batter"
+  
+    if (result === PITCH_RESULTS.BALL) {
+      return `Ball ${
+        (game.balls ?? 0) + 1
+      } to ${number}${name}`
+    }
+  
+    if (
+      result ===
+      PITCH_RESULTS.CALLED_STRIKE
+    ) {
+      return `Called Strike ${
+        (game.strikes ?? 0) + 1
+      } to ${number}${name}`
+    }
+  
+    if (
+      result ===
+      PITCH_RESULTS.SWINGING_STRIKE
+    ) {
+      return `Swinging Strike ${
+        (game.strikes ?? 0) + 1
+      } to ${number}${name}`
+    }
+  
+    if (result === PITCH_RESULTS.FOUL) {
+      return `Foul to ${number}${name}`
+    }
+  
+    if (
+      result === PITCH_RESULTS.IN_PLAY
+    ) {
+      return `Ball in play - ${number}${name}`
+    }
+  
+    return `${result} - ${number}${name}`
+  }
   async function handleStrikeoutPitch(strikeResult)  {
     try {
       const batter = getCurrentBatter(game)
@@ -1205,7 +1366,8 @@ const currentPitchCount =
   <PitcherChangeDialog
     currentPitcher={currentPitcher}
     players={defensivePlayers}
-    pitchCount={pitchCount}
+    
+  pitchCount={currentPitchCount}
     onCancel={() =>
       setShowPitcherChange(false)
     }
@@ -1214,6 +1376,8 @@ const currentPitchCount =
         type: "CHANGE_PITCHER",
         team: defensiveSide,
         playerId,
+        currentDefense:
+          defensiveAlignment,
       })
 
       setShowPitcherChange(false)
@@ -1276,9 +1440,8 @@ const currentPitchCount =
   }}
 
   onInPlay={() => {
-    handlePitch(PITCH_RESULTS.IN_PLAY)
-    setPendingHitType("inPlay")
-  }}
+  handlePitch(PITCH_RESULTS.IN_PLAY)
+}}
 
   onStrikeout={handleStrikeoutPitch}
 />
@@ -1344,7 +1507,7 @@ const currentPitchCount =
 
                 const playEvent = {
                   id: crypto.randomUUID(),
-                  playType: pendingHitType,
+                  playType: resolution.playType,
                   batter,
 
                   runnerDecisions: resolution.runnerDecisions ?? {},
@@ -1468,8 +1631,8 @@ const currentPitchCount =
                       game.currentPitcher?.id ?? game.pitcher?.id ?? null,
                   },
 
-                  eventType: pendingHitType,
-                  label: `${pendingHitType} - ${batter.name}`,
+                  eventType: resolution.playType,
+label: `${resolution.playType} - ${batter.name}`,
                 });
 
                 setPendingHitType(null);
@@ -1506,7 +1669,10 @@ const currentPitchCount =
                  */
                 if (
                   eventType === "groundout" ||
+                  eventType === "sacrificeBunt" ||
+                  eventType === "popout" ||
                   eventType === "flyout" ||
+                  eventType === "lineout" ||
                   eventType === "fielders_choice" ||
                   eventType === "error"
                 ) {
@@ -1517,17 +1683,27 @@ const currentPitchCount =
                   }
 
                   const enginePlayType =
-  eventType === "groundout"
-    ? "groundOut"
-    : eventType === "flyout"
-    ? "flyOut"
-    : eventType === "error"
-    ? "reachedOnError"
-    : "fielderChoice";
+                  eventType === "groundout" ||
+                  eventType === "sacrificeBunt"
+                    ? "groundOut"
+                
+                    : eventType === "flyout" ||
+                      eventType === "lineout" ||
+                      eventType === "popout"
+                    ? "flyOut"
+                
+                    : eventType === "error"
+                    ? "reachedOnError"
+                
+                    : "fielderChoice"
 
-                  const isDoublePlay =
-                    eventType === "groundout" && details.doublePlay === true;
-
+    const isDoublePlay =
+  (
+    eventType === "groundout" ||
+    eventType === "flyout" ||
+    eventType === "lineout"
+  ) &&
+  details.doublePlay === true;
                     
 
                   const engineGameState = {
@@ -1558,9 +1734,25 @@ const currentPitchCount =
                     errors: [],
                   }
 
-                  if (isDoublePlay && !game.bases?.first) {
+                  if (
+                    eventType === "groundout" &&
+                    isDoublePlay &&
+                    !game.bases?.first
+                  ) {
                     throw new Error(
                       "A standard ground-ball double play requires a runner on first."
+                    );
+                  }
+                  if (
+                    (
+                      eventType === "flyout" ||
+                      eventType === "lineout"
+                    ) &&
+                    isDoublePlay &&
+                    !game.bases?.[details.retiredRunnerBase]
+                  ) {
+                    throw new Error(
+                      `There is no runner on ${details.retiredRunnerBase}.`
                     );
                   }
 
@@ -1582,8 +1774,11 @@ const currentPitchCount =
   details.sacrifice === true
 
   const isSacrificeBunt =
-  eventType === "groundout" &&
-  details.sacrifice === true
+  eventType === "sacrificeBunt" ||
+  (
+    eventType === "groundout" &&
+    details.sacrifice === true
+  )
 
   
 
@@ -1591,17 +1786,26 @@ const currentPitchCount =
   ? {
       [details.retiredRunnerBase]: "out",
     }
+
   : isDoublePlay
   ? {
-      first: "out",
+      [details.retiredRunnerBase]: "out",
       batter: "out",
     }
+
   : isError
   ? getForcedAdvanceDecisions(game.bases)
-  : eventType === "flyout"
-  ? details.runnerDecisions ?? {}
+
+  : (
+    eventType === "flyout" ||
+    eventType === "lineout" ||
+    eventType === "popout"
+  )
+? details.runnerDecisions ?? {}
+
   : isSacrificeBunt
   ? details.runnerDecisions ?? {}
+
   : {}
 
                   const batterDestination = isFieldersChoice
@@ -1640,7 +1844,26 @@ const currentPitchCount =
                     playEvent.metadata.fielding
                   )
 
+                  console.log("AIR DP DEBUG:", {
+                    eventType,
+                    doublePlayFromDialog:
+                      details.doublePlay,
+                    isDoublePlay,
+                    retiredRunnerBase:
+                      details.retiredRunnerBase,
+                    runnerDecisions,
+                    basesBefore: game.bases,
+                    enginePlayType,
+                  });
+
                   const result = applyPlay(engineGameState, playEvent);
+
+                  console.log(
+                    "BASES AFTER PLAY ENGINE:",
+                    result.gameState?.bases ??
+                      result.state?.bases ??
+                      result
+                  );
 
                   if (!result.ok) {
                     throw new Error(
@@ -1753,27 +1976,57 @@ const currentPitchCount =
   Test Defense
 </Button>
 
-        <Button
-          className="w-full rounded-2xl"
-          variant="secondary"
-          onClick={async () => {
-            const finalState = {
-              ...game,
-              status: "final",
-            };
+<Button
+  className="w-full rounded-2xl"
+  variant="secondary"
+  onClick={async () => {
+    console.log("FINISH GAME CLICKED")
 
-            await finishGame(game.id, finalState);
+    try {
+      const finalState = {
+        ...game,
+        status: "final",
+      }
 
-            dispatch({
-              type: "LOAD_GAME",
-              game: finalState,
-            });
+      console.log(
+        "ABOUT TO FINISH GAME:",
+        game.id
+      )
 
-            setScreen("summary");
-          }}
-        >
-          Finish Game
-        </Button>
+      await finishGame(
+        game.id,
+        finalState
+      )
+
+      console.log(
+        "FINISH GAME SAVED"
+      )
+
+      dispatch({
+        type: "LOAD_GAME",
+        game: finalState,
+      })
+
+      setScreen("summary")
+
+      console.log(
+        "FINISH GAME COMPLETE"
+      )
+    } catch (error) {
+      console.error(
+        "COULD NOT FINISH GAME:",
+        error
+      )
+
+      alert(
+        error.message ||
+          "Could not finish game"
+      )
+    }
+  }}
+>
+  Finish Game
+</Button>
       </div>
     </main>
   );

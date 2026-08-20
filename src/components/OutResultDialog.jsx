@@ -127,6 +127,10 @@ export function OutResultDialog({
 const [middlePosition, setMiddlePosition] = useState("2B")
 const [retiredRunnerBase, setRetiredRunnerBase] =
   useState("first")
+  const [
+    secondaryPutoutPosition,
+    setSecondaryPutoutPosition,
+  ] = useState("1B")
   const [errorBatterDestination, setErrorBatterDestination] =
   useState("first")
 
@@ -159,36 +163,53 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
     return defense?.[position] ?? null
   }
 
-  function getFielderId(position) {
-    return defense?.[position] ?? null
-  }
+ 
   function submit() {
     console.log("OUT RESULT SUBMIT FIRED")
+  
     const isError =
       selectedResult.eventType === "error"
-      
   
     const isDoublePlay =
-      selectedResult.eventType === "groundout" &&
+      (
+        selectedResult.eventType === "groundout" ||
+        selectedResult.eventType === "sacrificeBunt" ||
+        selectedResult.eventType === "flyout" ||
+        selectedResult.eventType === "lineout"
+      ) &&
       doublePlay
-
-      
   
-      const fieldedById =
+    const isAirDoublePlay =
+      isDoublePlay &&
+      (
+        selectedResult.eventType === "flyout" ||
+        selectedResult.eventType === "lineout"
+      )
+  
+    const fieldedById =
       getFielderId(fieldedByPosition)
-    
+  
     const putoutId =
       getFielderId(
         selectedResult.eventType === "groundout" ||
-        selectedResult.eventType === "fielders_choice"
+selectedResult.eventType === "sacrificeBunt" ||
+selectedResult.eventType === "fielders_choice"
           ? putoutPosition
           : fieldedByPosition
       )
-    
+  
     const middleFielderId =
       isDoublePlay
         ? getFielderId(middlePosition)
         : null
+  
+    const secondaryPutoutId =
+      isAirDoublePlay
+        ? getFielderId(
+            secondaryPutoutPosition
+          )
+        : null
+  
       
     const details = createEventDetails({
       playType: selectedResult.eventType,
@@ -199,10 +220,11 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
       fieldedByPosition,
   
       putoutPosition:
-        selectedResult.eventType === "groundout" ||
-        selectedResult.eventType === "fielders_choice"
-          ? putoutPosition
-          : fieldedByPosition,
+      selectedResult.eventType === "groundout" ||
+      selectedResult.eventType === "sacrificeBunt" ||
+      selectedResult.eventType === "fielders_choice"
+        ? putoutPosition
+        : fieldedByPosition,
   
       notation,
       reachedOnError: isError,
@@ -212,7 +234,10 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
           ? fieldedByPosition
           : null,
   
-      sacrifice,
+          sacrifice:
+          selectedResult.eventType === "sacrificeBunt" ||
+          sacrifice,
+      
   
       doublePlay: isDoublePlay,
   
@@ -221,53 +246,87 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
           ? middlePosition
           : null,
   
-      retiredRunnerBase:
-        selectedResult.eventType === "fielders_choice"
-          ? retiredRunnerBase
-          : null,
+          retiredRunnerBase:
+          selectedResult.eventType === "fielders_choice" ||
+          (
+            selectedResult.eventType === "groundout" &&
+            isDoublePlay
+          ) ||
+          (
+            selectedResult.eventType === "flyout" &&
+            isDoublePlay
+          ) ||
+          (
+            selectedResult.eventType === "lineout" &&
+            isDoublePlay
+          )
+            ? retiredRunnerBase
+            : null,
+
+
+
+            secondaryPutoutPosition:
+  isDoublePlay &&
+  (
+    selectedResult.eventType === "flyout" ||
+    selectedResult.eventType === "lineout"
+  )
+    ? secondaryPutoutPosition
+    : null,
+            
   
       batterDestination:
         selectedResult.eventType === "error"
           ? errorBatterDestination
           : null,
   
-      runnerDecisions:
-        selectedResult.eventType === "flyout" ||
-        (
-          selectedResult.eventType === "groundout" &&
-          sacrifice
-        )
-          ? runnerDecisions
-          : null,
+     
+        runnerDecisions:
+  selectedResult.eventType === "sacrificeBunt" ||
+  selectedResult.eventType === "flyout" ||
+  (
+    selectedResult.eventType === "groundout" &&
+    sacrifice
+  )
+    ? runnerDecisions
+    : null,
 
           fielding: {
             putouts: isError
               ? []
-              : isDoublePlay
+              : isAirDoublePlay
                 ? [
-                    middleFielderId,
-                    putoutId,
+                    fieldedById,
+                    secondaryPutoutId,
                   ].filter(Boolean)
-                : [
-                    putoutId,
-                  ].filter(Boolean),
+                : isDoublePlay
+                  ? [
+                      middleFielderId,
+                      putoutId,
+                    ].filter(Boolean)
+                  : [
+                      putoutId,
+                    ].filter(Boolean),
           
             assists: isError
               ? []
-              : isDoublePlay
-                ? [
-                    fieldedById,
-                    middleFielderId,
-                  ].filter(Boolean)
-                : fieldedById !== putoutId
+              : isAirDoublePlay
+                ? fieldedById !==
+                  secondaryPutoutId
                   ? [fieldedById].filter(Boolean)
-                  : [],
+                  : []
+                : isDoublePlay
+                  ? [
+                      fieldedById,
+                      middleFielderId,
+                    ].filter(Boolean)
+                  : fieldedById !== putoutId
+                    ? [fieldedById].filter(Boolean)
+                    : [],
           
             errors: isError
               ? [fieldedById].filter(Boolean)
               : [],
-
-              
           },
     
     })
@@ -280,6 +339,28 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
       "FIELDING CREATED:",
       details.fielding
     )
+
+    console.log("OUT DETAILS FINAL:", {
+      selectedEventType:
+        selectedResult.eventType,
+    
+      checkboxDoublePlay:
+        doublePlay,
+    
+      detailsDoublePlay:
+        details.doublePlay,
+    
+      retiredRunnerBase:
+        details.retiredRunnerBase,
+    
+      secondaryPutoutPosition:
+        details.secondaryPutoutPosition,
+    
+      outsExpected:
+        isDoublePlay ? 2 : 1,
+    
+      details,
+    })
     onConfirm({
       eventType: selectedResult.eventType,
   
@@ -314,17 +395,17 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center">
-      <Card className="w-full max-w-md rounded-3xl bg-green-900 text-slate-950">
+    <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center border-b-2 ">
+      <Card className="w-full max-w-md  bg-green-900 text-slate-950 border-2 border-scoreboard-red " >
         <CardContent className="p-5 space-y-5">
           <div>
-            <h2 className="text-xl font-bold">Record Result</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-xl font-bold scoreboard-label  ">Record Result</h2>
+            <p className="text-xs scoreboard-label">
               Choose out type, error, or fielder's choice.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 ">
             {outResults.map((result) => (
               <Button
                 key={result.eventType}
@@ -338,13 +419,13 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
                   setSelectedResult(result)
                 
                   setSacrifice(false)
+                  setDoublePlay(false)
                   setRunnerDecisions({})
                 
-                  if (result.eventType !== "groundout") {
-                    setDoublePlay(false)
-                  }
-                
-                  if (result.eventType === "fielders_choice") {
+                  if (
+                    result.eventType ===
+                    "fielders_choice"
+                  ) {
                     setPutoutPosition("2B")
                     setRetiredRunnerBase("first")
                   }
@@ -356,13 +437,13 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
           </div>
 
           <div>
-            <div className="font-bold mb-2 ">
+            <div className="font-bold mb-2 scoreboard-label ">
               {selectedResult.eventType === "error"
                 ? "Error by"
                 : "Fielded by"}
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 ">
               {positions.map((position) => (
                 <Button
                   key={position}
@@ -378,8 +459,11 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
             </div>
           </div>
 
-          {selectedResult.eventType === "groundout" && (
-  <div className="space-y-4">
+          {(
+  selectedResult.eventType === "groundout" ||
+  selectedResult.eventType === "sacrificeBunt"
+) && (
+  <div className="space-y-4 scoreboard-label">
     <div>
       <div className="mb-2 font-bold">
         Throw / putout to
@@ -407,7 +491,10 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
 
    
 
-    {sacrifice && (
+    {(
+  sacrifice ||
+  selectedResult.eventType === "sacrificeBunt"
+) && (
       <div className="space-y-3">
         {bases.first && (
           <div>
@@ -558,7 +645,7 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
       </div>
     )}
 
-    <label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
+    <label className="flex items-center gap-3 rounded-2xl bg-white/10  p-3 text-white">
       <input
         type="checkbox"
         checked={doublePlay}
@@ -567,7 +654,7 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
         }
       />
 
-      <span className="font-medium">
+      <span className="font-medium scorebo  ">
         Double Play
       </span>
     </label>
@@ -686,174 +773,251 @@ const [retiredRunnerBase, setRetiredRunnerBase] =
 
         
           
-            {selectedResult.eventType === "flyout" && (
+{(
+  selectedResult.eventType === "flyout" ||
+  selectedResult.eventType === "lineout"
+) && (
   <div className="space-y-4">
     <label className="flex items-center gap-3 rounded-2xl bg-slate-100 p-3">
+    <input
+      type="checkbox"
+      checked={sacrifice}
+      onChange={(event) =>
+        setSacrifice(event.target.checked)
+      }
+    />
+
+    <span className="font-medium">
+      Sacrifice Fly
+    </span>
+  </label>
+
+    {!doublePlay && (
+      <>
+        {bases.third && (
+          <div>
+            <div className="mb-2 font-bold">
+              {bases.third.name} on 3rd
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={
+                  !runnerDecisions.third
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision(
+                    "third",
+                    "hold"
+                  )
+                }
+              >
+                Hold
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.third ===
+                  "home"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision(
+                    "third",
+                    "home"
+                  )
+                }
+              >
+                Score
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {bases.second && (
+          <div>
+            <div className="mb-2 font-bold">
+              {bases.second.name} on 2nd
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={
+                  !runnerDecisions.second
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision(
+                    "second",
+                    "hold"
+                  )
+                }
+              >
+                Hold
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.second ===
+                  "third"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision(
+                    "second",
+                    "third"
+                  )
+                }
+              >
+                3rd
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {bases.first && (
+          <div>
+            <div className="mb-2 font-bold">
+              {bases.first.name} on 1st
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant={
+                  !runnerDecisions.first
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision(
+                    "first",
+                    "hold"
+                  )
+                }
+              >
+                Hold
+              </Button>
+
+              <Button
+                variant={
+                  runnerDecisions.first ===
+                  "second"
+                    ? "default"
+                    : "secondary"
+                }
+                onClick={() =>
+                  setRunnerDecision(
+                    "first",
+                    "second"
+                  )
+                }
+              >
+                2nd
+              </Button>
+            </div>
+          </div>
+        )}
+      </>
+    )}
+  </div>
+)}
+{(
+  selectedResult.eventType === "flyout" ||
+  selectedResult.eventType === "lineout"
+) && (
+  <div className="space-y-4 border-t border-white/20 pt-4">
+
+    <label className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 text-white">
       <input
         type="checkbox"
-        checked={sacrifice}
+        checked={doublePlay}
         onChange={(event) =>
-          setSacrifice(event.target.checked)
+          setDoublePlay(event.target.checked)
         }
       />
 
       <span className="font-medium">
-        Sacrifice Fly
+        Double Play
       </span>
     </label>
 
-    {bases.third && (
-      <div>
-        <div className="mb-2 font-bold">
-          {bases.third.name} on 3rd
+    {doublePlay && (
+      <>
+        {/* RUNNER RETIRED */}
+
+        <div>
+          <div className="mb-2 font-bold">
+            Runner doubled off
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              ["first", bases.first],
+              ["second", bases.second],
+              ["third", bases.third],
+            ]
+              .filter(([, runner]) => runner)
+              .map(([base]) => (
+                <Button
+                  key={base}
+                  variant={
+                    retiredRunnerBase === base
+                      ? "default"
+                      : "secondary"
+                  }
+                  className="rounded-xl"
+                  onClick={() =>
+                    setRetiredRunnerBase(base)
+                  }
+                >
+                  {baseLabel(base)}
+                </Button>
+              ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant={
-              !runnerDecisions.third
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("third", "hold")
-            }
-          >
-            Hold
-          </Button>
+        {/* SECOND PUTOUT */}
 
-          <Button
-            variant={
-              runnerDecisions.third === "home"
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("third", "home")
-            }
-          >
-            Score
-          </Button>
+        <div>
+          <div className="mb-2 font-bold">
+            Second putout recorded by
+          </div>
 
-          <Button
-            variant={
-              runnerDecisions.third === "out"
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("third", "out")
-            }
-          >
-            Out
-          </Button>
+          <div className="grid grid-cols-3 gap-2">
+            {positions.map((position) => (
+              <Button
+                key={position}
+                variant={
+                  secondaryPutoutPosition ===
+                  position
+                    ? "default"
+                    : "secondary"
+                }
+                className="rounded-xl"
+                onClick={() =>
+                  setSecondaryPutoutPosition(
+                    position
+                  )
+                }
+              >
+                {position}
+              </Button>
+            ))}
+          </div>
         </div>
-      </div>
-    )}
-
-    {bases.second && (
-      <div>
-        <div className="mb-2 font-bold">
-          {bases.second.name} on 2nd
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant={
-              !runnerDecisions.second
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("second", "hold")
-            }
-          >
-            Hold
-          </Button>
-
-          <Button
-            variant={
-              runnerDecisions.second === "third"
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("second", "third")
-            }
-          >
-            3rd
-          </Button>
-
-          <Button
-            variant={
-              runnerDecisions.second === "out"
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("second", "out")
-            }
-          >
-            Out
-          </Button>
-        </div>
-      </div>
-    )}
-
-    {bases.first && (
-      <div>
-        <div className="mb-2 font-bold">
-          {bases.first.name} on 1st
-        </div>
-
-        <div className="grid grid-cols-3 gap-2">
-          <Button
-            variant={
-              !runnerDecisions.first
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("first", "hold")
-            }
-          >
-            Hold
-          </Button>
-
-          <Button
-            variant={
-              runnerDecisions.first === "second"
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("first", "second")
-            }
-          >
-            2nd
-          </Button>
-
-          <Button
-            variant={
-              runnerDecisions.first === "out"
-                ? "default"
-                : "secondary"
-            }
-            onClick={() =>
-              setRunnerDecision("first", "out")
-            }
-          >
-            Out
-          </Button>
-        </div>
-      </div>
+      </>
     )}
   </div>
 )}
          
 
-          <div className="rounded-2xl bg-slate-100 p-3">
-            <div className="text-sm text-slate-500">Scorebook notation</div>
+          <div className="rounded-2xl p-3  bg-white/10  p-3 text-white">
+            <div className="text-sm ">Scorebook notation</div>
             <div className="text-2xl font-black">{notation}</div>
           </div>
 

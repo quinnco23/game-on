@@ -42,8 +42,20 @@ export function PlayResolutionDialog({
     { from: "first", runner: bases.first },
   ].filter((item) => item.runner)
 
-  const [batterDestination, setBatterDestination] = useState(
-    defaultBatterDestination(playType)
+  const [batterDestination, setBatterDestination] =
+  useState(
+    defaultBatterDestination(
+      playType === "inPlay"
+        ? "single"
+        : playType
+    )
+  )
+
+  const [resolvedPlayType, setResolvedPlayType] =
+  useState(
+    playType === "inPlay"
+      ? "single"
+      : playType
   )
 
   const [runnerAdvances, setRunnerAdvances] = useState(
@@ -93,14 +105,14 @@ export function PlayResolutionDialog({
     })
   
     const resolution = {
-      playType,
+      playType: resolvedPlayType,
       batterId: batter.id,
       batterDestination,
       runnerDecisions,
       runs: runsScored,
       rbi,
       details: {
-        playType,
+        playType: resolvedPlayType,
         batterDestination,
         runnerAdvances: runnerAdvances.map((advance) => ({
           runnerId: advance.runnerId,
@@ -133,6 +145,39 @@ export function PlayResolutionDialog({
       md:max-w-md
       md:rounded-3xl
     ">
+
+{playType === "inPlay" && (
+  <div>
+    <div className="mb-2 font-bold">
+      Result
+    </div>
+
+    <div className="grid grid-cols-2 gap-2">
+      {[
+        ["single", "Single"],
+        ["double", "Double"],
+        ["triple", "Triple"],
+        ["homeRun", "Home Run"],
+      ].map(([value, label]) => (
+        <Button
+          key={value}
+          variant={
+            resolvedPlayType === value
+              ? "default"
+              : "secondary"
+          }
+          className="rounded-xl"
+          onClick={() =>
+            setResolvedPlayType(value)
+          }
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  </div>
+)}
+
     <CardContent className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:p-5">
       <div className="flex-1 overflow-y-auto p-5 pb-8 space-y-5">
         <div>

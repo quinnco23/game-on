@@ -32,7 +32,7 @@ export function PlayControls(
 
     {/* BATTER RESULTS */}
     <section className="space-y-2">
-      <div className="text-sm font-bold uppercase tracking-wide text-slate-500">
+      <div className="text-sm font-bold uppercase tracking-wide text-scoreboard-cream">
         Batter
       </div>
 
@@ -90,17 +90,17 @@ export function PlayControls(
     </section>
 
     {/* RUNNER ACTIONS */}
-    <section className="space-y-3 border-t pt-4">
-      <div className="text-sm font-bold uppercase tracking-wide text-slate-500">
+    <section className="space-y-3 border-t pt-4 ">
+      <div className="text-sm font-bold uppercase tracking-wide ">
         Runners
       </div>
 
       <div>
-        <div className="mb-2 text-xs font-semibold text-slate-500">
+        <div className="mb-2 text-xs font-semibold text-scoreboard-cream">
           Steal
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 text-scoreboard-cream">
           <Button
             variant="secondary"
             disabled={!game.bases?.first}
@@ -188,53 +188,90 @@ export function PlayControls(
     </section>
 
     {/* PITCH / ADVANCE EVENTS */}
-    <section className="space-y-3 border-t pt-4">
-      <div className="text-sm font-bold uppercase tracking-wide text-slate-500">
-        Pitch Events
-      </div>
+    {/* PITCH / ADVANCE EVENTS */}
+<section className="space-y-3 border-t pt-4">
+  <div className="text-sm font-bold uppercase tracking-wide text-slate-500">
+    Pitch Events
+  </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <Button
-          variant="secondary"
-          disabled={!game.bases?.second}
-          onClick={() =>
-            onPassedBall("second", "third")
-          }
-        >
-          PB → 3B
-        </Button>
+  {/* PASSED BALL */}
+  <div>
+    <div className="mb-2 text-xs font-bold uppercase text-slate-400">
+      Passed Ball
+    </div>
 
-        <Button
-          variant="secondary"
-          disabled={!game.bases?.third}
-          onClick={() =>
-            onPassedBall("third", "home")
-          }
-        >
-          PB → Home
-        </Button>
+    <div className="grid grid-cols-3 gap-2">
+      <Button
+        variant="secondary"
+        disabled={!game.bases?.first}
+        onClick={() =>
+          onPassedBall("first", "second")
+        }
+      >
+        PB → 2B
+      </Button>
 
-        <Button
-          variant="secondary"
-          disabled={!game.bases?.second}
-          onClick={() =>
-            onWildPitch("second", "third")
-          }
-        >
-          WP → 3B
-        </Button>
+      <Button
+        variant="secondary"
+        disabled={!game.bases?.second}
+        onClick={() =>
+          onPassedBall("second", "third")
+        }
+      >
+        PB → 3B
+      </Button>
 
-        <Button
-          variant="secondary"
-          disabled={!game.bases?.third}
-          onClick={() =>
-            onWildPitch("third", "home")
-          }
-        >
-          WP → Home
-        </Button>
-      </div>
-    </section>
+      <Button
+        variant="secondary"
+        disabled={!game.bases?.third}
+        onClick={() =>
+          onPassedBall("third", "home")
+        }
+      >
+        PB → Home
+      </Button>
+    </div>
+  </div>
+
+  {/* WILD PITCH */}
+  <div>
+    <div className="mb-2 text-xs font-bold uppercase text-slate-400">
+      Wild Pitch
+    </div>
+
+    <div className="grid grid-cols-3 gap-2">
+      <Button
+        variant="secondary"
+        disabled={!game.bases?.first}
+        onClick={() =>
+          onWildPitch("first", "second")
+        }
+      >
+        WP → 2B
+      </Button>
+
+      <Button
+        variant="secondary"
+        disabled={!game.bases?.second}
+        onClick={() =>
+          onWildPitch("second", "third")
+        }
+      >
+        WP → 3B
+      </Button>
+
+      <Button
+        variant="secondary"
+        disabled={!game.bases?.third}
+        onClick={() =>
+          onWildPitch("third", "home")
+        }
+      >
+        WP → Home
+      </Button>
+    </div>
+  </div>
+</section>
 
     {/* GAME ACTIONS */}
     <section className="border-t pt-4">

@@ -62,7 +62,16 @@ export const initialGame = {
     third: null,
   },
 
+  gameClock: {
+    startedAt: null,
+    durationMinutes: 100,
+    stoppedAt: null,
+    status: "not_started",
+  },
+
+
   pitchEvents: [],
 
   events: [],
 }
+

@@ -258,10 +258,10 @@ export function CountControls({
   
  
   return (
-    <Card className="rounded-3xl bg-white/10 border-white/10 text-white">
-      <CardContent className="p-5 space-y-4">
+    <Card className="rounded-3xl bg-white/10 border-white/10 text-scoreboard-cream">
+      <CardContent className="p-5 space-y-4 ">
         <div className="text-center">
-          <div className="text-sm text-white/60">
+          <div className="text-sm text-scoreboard-cream">
             Count
           </div>
 
@@ -270,8 +270,8 @@ export function CountControls({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-  <Button onClick={handleBall}>
+        <div className="grid grid-cols-2 gap-2 "> 
+  <Button onClick={handleBall} >
     {walkLikely
       ? "Ball 4 / Walk"
       : "Ball"}

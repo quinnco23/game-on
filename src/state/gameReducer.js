@@ -55,27 +55,47 @@ export function gameReducer(state, action) {
 
     case "LOAD_GAME":
       return action.game;
-    case "BALL": {
-      const nextBalls = state.balls + 1;
-      if (nextBalls >= 4) {
-        return applyWalk(state);
+      case "BALL": {
+        const nextBalls = state.balls + 1
+      
+        if (nextBalls >= 4) {
+          return applyWalk(state)
+        }
+      
+        return {
+          ...state,
+          balls: nextBalls,
+        }
       }
-      return logEvent({ ...state, balls: nextBalls }, "Ball");
-    }
-
-    case "STRIKE": {
-      const nextStrikes = state.strikes + 1;
-      if (nextStrikes >= 3) {
-        return applyOut(state, "Strikeout");
+      
+      case "STRIKE": {
+        const nextStrikes = state.strikes + 1
+      
+        if (nextStrikes >= 3) {
+          return applyOut(
+            state,
+            "Strikeout"
+          )
+        }
+      
+        return {
+          ...state,
+          strikes: nextStrikes,
+        }
       }
-      return logEvent({ ...state, strikes: nextStrikes }, "Strike");
-    }
-
-    case "FOUL": {
-      const nextStrikes = Math.min(2, state.strikes + 1);
-      return logEvent({ ...state, strikes: nextStrikes }, "Foul ball");
-    }
-
+      
+      case "FOUL": {
+        const nextStrikes =
+          Math.min(
+            2,
+            state.strikes + 1
+          )
+      
+        return {
+          ...state,
+          strikes: nextStrikes,
+        }
+      }
 
     case "RESOLVE_PLAY":
       return applyResolvedHit(state, action.resolution);
@@ -193,16 +213,29 @@ export function gameReducer(state, action) {
       
         const historyEntry =
           structuredClone(stateWithoutHistory);
+
+          const sideRetired =
+  result.state.half !== state.half ||
+  result.state.inning !== state.inning
+
+const nextBases =
+  sideRetired
+    ? {
+        first: null,
+        second: null,
+        third: null,
+      }
+    : result.state.bases
       
         return {
           ...state,
       
           history: [
-            ...(state.history ?? []),
+            ...(state.history ?? []).slice(-49),
             historyEntry,
           ],
       
-          bases: result.state.bases,
+          bases: nextBases,
       
           score: {
             ...state.score,
@@ -268,17 +301,37 @@ case "UNDO": {
           playerId,
         } = action
       
+        const currentDefense = {
+          ...(state.defense?.[team] ?? {}),
+        }
+      
+        // Remove this player from any other position
+        for (const [
+          existingPosition,
+          existingPlayerId,
+        ] of Object.entries(currentDefense)) {
+          if (
+            existingPlayerId === playerId &&
+            existingPosition !== position
+          ) {
+            delete currentDefense[
+              existingPosition
+            ]
+          }
+        }
+      
+        // Assign player to new position
+        currentDefense[position] =
+          playerId
+      
         return {
           ...state,
       
           defense: {
             ...state.defense,
       
-            [team]: {
-              ...state.defense?.[team],
-      
-              [position]: playerId,
-            },
+            [team]:
+              currentDefense,
           },
         }
       }
@@ -325,7 +378,11 @@ case "UNDO": {
         } = action
       
         const currentDefense = {
-          ...(state.defense?.[team] ?? {}),
+          ...(
+            action.currentDefense ??
+            state.defense?.[team] ??
+            {}
+          ),
         }
       
         const oldPitcherId =
@@ -402,6 +459,59 @@ case "UNDO": {
             }
           )
       
+        const pitchEvent =
+          action.pitchEvent ?? {}
+      
+        const feedEvent = {
+          id:
+            pitchEvent.id ??
+            crypto.randomUUID(),
+      
+          inning:
+            pitchEvent.inning ??
+            state.inning,
+      
+          half:
+            pitchEvent.half ??
+            state.half,
+      
+          timestamp:
+            new Date().toLocaleTimeString(),
+      
+          label:
+            pitchEvent.label ??
+            pitchEvent.result ??
+            "Pitch",
+      
+          event_type: "pitch",
+      
+          result:
+            pitchEvent.result ?? null,
+      
+          batter:
+            pitchEvent.batter ?? null,
+      
+          batter_id:
+            pitchEvent.batterId ??
+            pitchEvent.batter?.id ??
+            null,
+      
+          pitcher_id:
+            pitchEvent.pitcherId ??
+            action.pitcherId ??
+            null,
+      
+          balls_before:
+            pitchEvent.ballsBefore ??
+            state.balls ??
+            0,
+      
+          strikes_before:
+            pitchEvent.strikesBefore ??
+            state.strikes ??
+            0,
+        }
+      
         return {
           ...state,
       
@@ -409,12 +519,36 @@ case "UNDO": {
       
           pitchEvents: [
             ...(state.pitchEvents ?? []),
-            action.pitchEvent,
+            pitchEvent,
+          ],
+      
+          events: [
+            ...(state.events ?? []),
+            feedEvent,
           ],
         }
       }
 
-      
+      case "START_GAME_CLOCK":
+  return {
+    ...state,
+
+    gameClock: {
+      ...(state.gameClock ?? {}),
+
+      startedAt:
+        action.startedAt,
+
+      durationMinutes:
+        state.gameClock
+          ?.durationMinutes ??
+        100,
+
+      stoppedAt: null,
+
+      status: "running",
+    },
+  }
 
     default:
       return state;

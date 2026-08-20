@@ -40,7 +40,7 @@ export function buildBoxScore(events = [], lineup = []) {
       event.event_type || event.type
 
     const hits = playerEvents.filter((event) =>
-      ["single", "double", "triple", "home_run"].includes(
+      ["single", "double", "triple", "homeRun"].includes(
         eventType(event)
       )
     ).length

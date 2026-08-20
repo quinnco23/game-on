@@ -1,7 +1,7 @@
 // src/services/gameActions.jsx
 
 import { saveEvent } from "./eventsService"
-import { updateGameState } from "./gamesService"
+// import { updateGameState } from "./gamesService"
 import { gameReducer } from "../state/gameReducer"
 import { getCurrentBatter } from "../state/gameLogic"
 
@@ -13,8 +13,8 @@ export async function handleGameAction({
   label,
   extraEventData = {},
 }) {
-  const batter = getCurrentBatter(game)
-  const nextGame = gameReducer(game, action)
+  const batter =
+    getCurrentBatter(game)
 
   dispatch(action)
 
@@ -28,11 +28,16 @@ export async function handleGameAction({
 
     inning: game.inning,
     half: game.half,
+
     event_type: eventType,
     label,
 
-    runs: extraEventData.runs ?? 0,
-    rbi: extraEventData.rbi ?? 0,
+    runs:
+      extraEventData.runs ?? 0,
+
+    rbi:
+      extraEventData.rbi ?? 0,
+
     outs_recorded:
       extraEventData.outs_recorded ?? 0,
 
@@ -45,9 +50,4 @@ export async function handleGameAction({
           : game.homeTeam,
     },
   })
-
-  await updateGameState(
-    game.id,
-    nextGame
-  )
 }

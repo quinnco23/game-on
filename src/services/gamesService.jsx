@@ -24,32 +24,43 @@ export async function getFinishedGames() {
   return data
 }
 
-export async function finishGame(gameId, state) {
-  const { data, error } = await supabase
+export async function finishGame(
+  gameId,
+  state
+) {
+  const { error } = await supabase
     .from("games")
     .update({
       status: "final",
       state,
     })
     .eq("id", gameId)
-    .select()
-    .single()
 
   if (error) throw error
-  return data
+
+  return {
+    id: gameId,
+    status: "final",
+    state,
+  }
 }
 
-export async function updateGameState(gameId, state) {
-  const { data, error } = await supabase
+export async function updateGameState(
+  gameId,
+  gameState
+) {
+  const { error } = await supabase
     .from("games")
-    .update({ state })
+    .update({
+      state: gameState,
+    })
     .eq("id", gameId)
-    .select()
-    .single()
 
   if (error) throw error
-  return data
+
+  return gameState
 }
+
 
 export async function getLatestGame() {
   const { data, error } = await supabase

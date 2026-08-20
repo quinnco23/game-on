@@ -1,3 +1,4 @@
+import { GameClock } from "./GameClock"
 export function LiveGameHeader({
     game,
     currentBatter,
@@ -64,6 +65,10 @@ export function LiveGameHeader({
             {" · "}
             {outs} {outs === 1 ? "Out" : "Outs"}
           </div>
+
+          <GameClock
+  gameClock={game.gameClock}
+/>
         </div>
   
         {/* SCORE */}
