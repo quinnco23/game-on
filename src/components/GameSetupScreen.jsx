@@ -14,6 +14,7 @@ import { Button } from "./ui/button"
 import { createGame } from "../services/gamesService"
 import { saveLineup, getTeamPlayers } from "../services/playersService"
 import { getTeams } from "@/services/teamService"
+import { resolveLineupPlayers } from "../services/playersService"
 
 
 
@@ -215,30 +216,19 @@ const homeTeam =
 
       <div className="space-y-3 border-t-2 border-scoreboard-red pt-5">
       <Button
-      disabled={!canStartGame}
+  disabled={!canStartGame}
   className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
   onClick={async () => {
     console.log("START GAME BUTTON CLICKED")
-  
-    console.log("SETUP STATE:", {
-      homeTeam,
-      awayTeam,
-      homeLineup,
-      awayLineup,
-      homeRoster,
-      awayRoster,
-    })
-  
+
     try {
-      // Make sure both teams are selected
       if (!homeTeam || !awayTeam) {
         alert(
           "Select both a home and away team."
         )
         return
       }
-  
-      // Make sure both lineups exist
+
       if (
         homeLineup.length === 0 ||
         awayLineup.length === 0
@@ -248,7 +238,7 @@ const homeTeam =
         )
         return
       }
-  
+
       console.log("START LINEUPS:", {
         home: homeLineup.map(
           (player) => player.name
@@ -257,97 +247,129 @@ const homeTeam =
           (player) => player.name
         ),
       })
-  
-      console.log("ABOUT TO CREATE GAME")
-  
+
+      //
+      // 1. RESOLVE MANUAL PLAYERS FIRST
+      //
+      const [
+        resolvedHomeLineup,
+        resolvedAwayLineup,
+      ] = await Promise.all([
+        resolveLineupPlayers(
+          homeLineup,
+          homeTeam.id
+        ),
+
+        resolveLineupPlayers(
+          awayLineup,
+          awayTeam.id
+        ),
+      ])
+
+      console.log(
+        "RESOLVED HOME LINEUP:",
+        resolvedHomeLineup
+      )
+
+      console.log(
+        "RESOLVED AWAY LINEUP:",
+        resolvedAwayLineup
+      )
+
+      //
+      // 2. ONLY CREATE GAME AFTER PLAYERS EXIST
+      //
+      console.log(
+        "ABOUT TO CREATE GAME"
+      )
+
       const savedGame =
         await createGame({
           homeTeamId: homeTeam.id,
           awayTeamId: awayTeam.id,
         })
-  
-        console.log("START LINEUPS:", {
-          home: homeLineup.map(
-            (player) => player.name
-          ),
-          away: awayLineup.map(
-            (player) => player.name
-          ),
-        })
 
-console.log(
-  "GAME CREATED:",
-  savedGame
-)
+      console.log(
+        "GAME CREATED:",
+        savedGame
+      )
 
-console.log(
-  "HOME LINEUP BEFORE SAVE:",
-  homeLineup
-)
+      //
+      // 3. SAVE BOTH LINEUPS
+      //
+      console.time(
+        "SAVE BOTH LINEUPS"
+      )
 
-console.log(
-  "AWAY LINEUP BEFORE SAVE:",
-  awayLineup
-)
+      const [
+        savedHomeLineup,
+        savedAwayLineup,
+      ] = await Promise.all([
+        saveLineup({
+          gameId: savedGame.id,
+          teamId: homeTeam.id,
+          lineup:
+            resolvedHomeLineup,
+        }),
 
-console.time("SAVE BOTH LINEUPS")
+        saveLineup({
+          gameId: savedGame.id,
+          teamId: awayTeam.id,
+          lineup:
+            resolvedAwayLineup,
+        }),
+      ])
 
-const [
-  savedHomeLineup,
-  savedAwayLineup,
-] = await Promise.all([
-  saveLineup({
-    gameId: savedGame.id,
-    teamId: homeTeam.id,
-    lineup: homeLineup,
-  }),
+      console.timeEnd(
+        "SAVE BOTH LINEUPS"
+      )
 
-  saveLineup({
-    gameId: savedGame.id,
-    teamId: awayTeam.id,
-    lineup: awayLineup,
-  }),
-])
+      console.log(
+        "SAVED HOME LINEUP:",
+        savedHomeLineup
+      )
 
-console.timeEnd("SAVE BOTH LINEUPS")
+      console.log(
+        "SAVED AWAY LINEUP:",
+        savedAwayLineup
+      )
 
-console.log(
-  "SAVED HOME LINEUP:",
-  savedHomeLineup
-)
+      //
+      // 4. ENTER THE GAME
+      //
+      onStart({
+        gameId: savedGame.id,
 
-console.log(
-  "SAVED AWAY LINEUP:",
-  savedAwayLineup
-)
+        homeTeam:
+          homeTeam.name,
 
-console.timeEnd("START GAME TOTAL")
+        awayTeam:
+          awayTeam.name,
 
-onStart({
-  gameId: savedGame.id,
+        homeLineup:
+          savedHomeLineup,
 
-  homeTeam: homeTeam.name,
-  awayTeam: awayTeam.name,
+        awayLineup:
+          savedAwayLineup,
 
-  homeLineup: savedHomeLineup,
-  awayLineup: savedAwayLineup,
-
-  homeRoster,
-  awayRoster,
-})
+        homeRoster,
+        awayRoster,
+      })
     } catch (error) {
       console.error(
         "Could not start game:",
         error
       )
 
-      alert(error.message)
+      alert(
+        error.message ||
+          "Could not start game"
+      )
     }
   }}
 >
   Start Game
 </Button>
-
        
       </div>
     </CardContent>

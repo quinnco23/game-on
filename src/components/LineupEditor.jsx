@@ -37,62 +37,133 @@ function SortablePlayerRow({
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className="
-        grid
-        grid-cols-[32px_46px_1fr_64px_36px]
-        items-center
-        gap-2
-      "
-    >
-      <button
-        type="button"
-        className="cursor-grab text-white/50 active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
-      >
-        ☰
-      </button>
+  ref={setNodeRef}
+  style={style}
+  className="
+    grid
+    grid-cols-[40px_42px_1fr_72px_42px]
+    items-center
+    gap-2
+  "
+>
+  {/* DRAG HANDLE */}
+  <button
+    type="button"
+    className="
+      flex
+      h-10
+      w-10
+      items-center
+      justify-center
+      cursor-grab
+      text-2xl
+      font-bold
+      text-scoreboard-cream/70
+      transition
+      hover:text-scoreboard-cream
+      active:cursor-grabbing
+    "
+    {...attributes}
+    {...listeners}
+    aria-label="Reorder player"
+  >
+    ☰
+  </button>
 
-      <div className="text-center text-sm font-bold">
-        {index + 1}
-      </div>
+  {/* ORDER */}
+  <div
+    className="
+      text-center
+      font-heading
+      text-base
+      font-bold
+      text-scoreboard-cream/70
+    "
+  >
+    {index + 1}
+  </div>
 
-      <input
-        className="rounded-xl p-2 text-sm text-white"
-        value={player.name}
-        onChange={(e) =>
-          updatePlayer(
-            index,
-            "name",
-            e.target.value
-          )
-        }
-      />
+  {/* PLAYER NAME */}
+  <input
+    className="
+      w-full
+      rounded-none
+      border
+      border-scoreboard-cream/20
+      bg-scoreboard-light/20
+      px-3
+      py-2.5
+      font-heading
+      text-base
+      font-semibold
+      text-scoreboard-cream
+      outline-none
+      focus:border-scoreboard-amber
+    "
+    value={player.name}
+    onChange={(e) =>
+      updatePlayer(
+        index,
+        "name",
+        e.target.value
+      )
+    }
+  />
 
-      <input
-        className="rounded-xl p-2 text-sm text-white"
-        value={player.position}
-        onChange={(e) =>
-          updatePlayer(
-            index,
-            "position",
-            e.target.value
-          )
-        }
-      />
+  {/* POSITION */}
+  <input
+    className="
+      w-full
+      rounded-none
+      border
+      border-scoreboard-cream/20
+      bg-scoreboard-light/20
+      px-2
+      py-2.5
+      text-center
+      text-base
+      font-bold
+      uppercase
+      text-scoreboard-cream
+      outline-none
+      focus:border-scoreboard-amber
+    "
+    value={player.position}
+    onChange={(e) =>
+      updatePlayer(
+        index,
+        "position",
+        e.target.value
+      )
+    }
+  />
 
-      <button
-        type="button"
-        className="text-white/50 hover:text-white"
-        onClick={() =>
-          removePlayer(index)
-        }
-      >
-        ×
-      </button>
-    </div>
+  {/* REMOVE */}
+  <button
+    type="button"
+    className="
+      flex
+      h-10
+      w-10
+      items-center
+      justify-center
+      bg-scoreboard-light/40
+      text-2xl
+      font-black
+      leading-none
+      text-scoreboard-red
+      transition
+      hover:bg-scoreboard-red
+      hover:text-scoreboard-cream
+    "
+    onClick={() =>
+      removePlayer(index)
+    }
+    aria-label={`Remove ${player.name}`}
+  >
+    ×
+  </button>
+</div>
   )
 }
 
@@ -159,12 +230,13 @@ export function LineupEditor({
   function addPlayer() {
     setLineup((current) => [
       ...(current ?? []),
-
+  
       {
         id: crypto.randomUUID(),
         number: "",
         name: "",
         position: "",
+        isManual: true,
       },
     ])
   }
@@ -195,7 +267,7 @@ export function LineupEditor({
   })
   return (
     <div className="rounded-3xl bg-white/5 p-4 space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mx-2.5">
         <h2 className="font-bold">{title}</h2>
         <Button onClick={addPlayer}>
   + Manual Player

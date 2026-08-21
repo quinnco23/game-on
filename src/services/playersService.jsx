@@ -209,3 +209,32 @@ export async function deactivatePlayer(playerId) {
 
   return data
 }
+
+export async function resolveLineupPlayers(
+  lineup,
+  teamId
+) {
+  return Promise.all(
+    lineup.map(async (player) => {
+      if (
+        player.id &&
+        !player.isManual
+      ) {
+        return player
+      }
+
+      const savedPlayer =
+        await findOrCreatePlayer({
+          teamId,
+          name: player.name,
+          number: player.number,
+        })
+
+      return {
+        ...player,
+        id: savedPlayer.id,
+        isManual: false,
+      }
+    })
+  )
+}
