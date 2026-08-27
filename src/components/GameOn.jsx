@@ -47,12 +47,21 @@ import {
 } from "../scoring/pitchEvent"
 import { TeamScreen } from "./TeamScreen";
 import { useNavigate } from "react-router-dom"
-import { savePitchEvent } from "@/services/pitchEventsService";
+// import { savePitchEvent } from "@/services/pitchEventsService";
 
 import {
   derivePitchCountStats,
   
 } from "../scoring/pitchEvent"
+
+import {
+  getGamePitchEvents,
+   savePitchEvent,
+ } from "@/services/pitchEventsService"
+
+ import {
+  GameClock,
+} from "./GameClock"
 
 // function FieldBase({ runner, label, className = "" }) {
 //   const occupied = Boolean(runner);
@@ -141,6 +150,11 @@ export default function TapScorePrototype() {
 
 const pendingGameRef =
   useRef(null)
+
+  const [
+    regulationComplete,
+    setRegulationComplete,
+  ] = useState(null)
 
   // useEffect(() => {
   //   const result = resolveRunnerMovement({
@@ -352,22 +366,78 @@ const currentPitcher =
         activeGame={activeGame}
         onTeams={() => navigate("/teams")}
         finishedGames={finishedGames}
-        onResume={(selectedGame) => {
-          const savedState = selectedGame.state ?? selectedGame.game_state;
-
+        onResume={async (selectedGame) => {
+          const savedState =
+            selectedGame.state ??
+            selectedGame.game_state
+        
           if (!savedState) {
-            console.error("Active game has no saved state:", selectedGame);
-            alert("This game does not contain a saved game state.");
-            return;
+            console.error(
+              "Active game has no saved state:",
+              selectedGame
+            )
+        
+            alert(
+              "This game does not contain a saved game state."
+            )
+        
+            return
           }
-
-          dispatch({
-            type: "LOAD_GAME",
-            game: savedState,
-          });
-
-          setActiveGame(selectedGame);
-          setScreen("scoring");
+        
+          try {
+            const persistedPitches =
+              await getGamePitchEvents(
+                selectedGame.id
+              )
+        
+            const restoredPitchEvents =
+              persistedPitches.map(
+                (pitch) => ({
+                  ...pitch,
+        
+                  // Normalize DB names back to
+                  // the local GameOn shape.
+                  pitcherId:
+                    pitch.pitcher_id,
+        
+                  batterId:
+                    pitch.batter_id,
+        
+                  ballsBefore:
+                    pitch.balls_before,
+        
+                  strikesBefore:
+                    pitch.strikes_before,
+        
+                  outsBefore:
+                    pitch.outs_before,
+                })
+              )
+        
+            dispatch({
+              type: "LOAD_GAME",
+        
+              game: {
+                ...savedState,
+        
+                pitchEvents:
+                  restoredPitchEvents,
+              },
+            })
+        
+            setActiveGame(selectedGame)
+            setScreen("scoring")
+          } catch (error) {
+            console.error(
+              "Could not resume pitch history:",
+              error
+            )
+        
+            alert(
+              error.message ||
+                "Could not resume game"
+            )
+          }
         }}
         onNewGame={() => {
           dispatch({
@@ -1306,12 +1376,92 @@ const currentPitcher =
       )
     }
   }
+  async function handleEndAtRegulation() {
+    if (!regulationComplete) {
+      return
+    }
+  
+    const {
+      result,
+      batterId,
+      pitcherId,
+    } = regulationComplete
+  
+    const endedAt =
+      new Date().toISOString()
+  
+    const finalResult = {
+      ...result,
+  
+      state: {
+        ...result.state,
+  
+        // Keep the game at the completed
+        // bottom of regulation.
+        inning:
+          game.gameRules?.innings ?? 6,
+  
+        half: "bottom",
+  
+        outs: 3,
+  
+        bases: {
+          first: null,
+          second: null,
+          third: null,
+        },
+      },
+    }
+  
+    dispatch({
+      type: "APPLY_PLAY_RESULT",
+      result: finalResult,
+      batterId,
+      pitcherId,
+    })
+  
+    dispatch({
+      type: "FINALIZE_GAME",
+      reason: "regulation",
+      endedAt,
+    })
+  
+    setRegulationComplete(null)
+  }
+
+  function handleContinueExtraInnings() {
+    if (!regulationComplete) {
+      return
+    }
+  
+    const {
+      result,
+      batterId,
+      pitcherId,
+    } = regulationComplete
+  
+    dispatch({
+      type: "APPLY_PLAY_RESULT",
+      result,
+      batterId,
+      pitcherId,
+    })
+  
+    setRegulationComplete(null)
+  }
 
   
   return (
     <main className="min-h-screen bg-green-950 text-white p-4">
       <div className="mx-auto max-w-md space-y-4">
         <Scoreboard game={game} />
+
+        <div className="scoreboard-panel p-4">
+  <GameClock
+    gameClock={game.gameClock}
+    gameRules={game.gameRules}
+  />
+</div>
         <div className="relative">
   <BaseRunnersField 
   bases={game.bases} 
@@ -1682,6 +1832,8 @@ label: `${resolution.playType} - ${batter.name}`,
                     throw new Error("Could not identify the current batter.");
                   }
 
+                 
+
                   const enginePlayType =
                   eventType === "groundout" ||
                   eventType === "sacrificeBunt"
@@ -1782,31 +1934,33 @@ label: `${resolution.playType} - ${batter.name}`,
 
   
 
-  const runnerDecisions = isFieldersChoice
-  ? {
-      [details.retiredRunnerBase]: "out",
-    }
+  const runnerDecisions =
+  isFieldersChoice
+    ? {
+        [details.retiredRunnerBase]: "out",
+      }
 
-  : isDoublePlay
-  ? {
-      [details.retiredRunnerBase]: "out",
-      batter: "out",
-    }
+    : isDoublePlay
+    ? {
+        [details.retiredRunnerBase]: "out",
+        batter: "out",
+      }
 
-  : isError
-  ? getForcedAdvanceDecisions(game.bases)
+    : isError
+    ? getForcedAdvanceDecisions(
+        game.bases
+      )
 
-  : (
-    eventType === "flyout" ||
-    eventType === "lineout" ||
-    eventType === "popout"
-  )
-? details.runnerDecisions ?? {}
+    : (
+        eventType === "groundout" ||
+        eventType === "sacrificeBunt" ||
+        eventType === "flyout" ||
+        eventType === "lineout" ||
+        eventType === "popout"
+      )
+    ? details.runnerDecisions ?? {}
 
-  : isSacrificeBunt
-  ? details.runnerDecisions ?? {}
-
-  : {}
+    : {}
 
                   const batterDestination = isFieldersChoice
                     ? "first"
@@ -1871,6 +2025,77 @@ label: `${resolution.playType} - ${batter.name}`,
                         `Could not score the ${enginePlayType}.`
                     );
                   }
+
+                  // Check whether this play completed regulation.
+const regulationInnings =
+game.gameRules?.innings ?? 6
+
+const reachedEndOfRegulation =
+game.inning === regulationInnings &&
+game.half === "bottom" &&
+result.metadata?.halfInningEnded === true
+
+console.log(
+"REGULATION CHECK:",
+{
+  regulationInnings,
+  inningBeforePlay: game.inning,
+  halfBeforePlay: game.half,
+  halfInningEnded:
+    result.metadata?.halfInningEnded,
+  reachedEndOfRegulation,
+}
+)
+
+if (reachedEndOfRegulation) {
+setRegulationComplete({
+  result,
+  batterId: batter.id,
+
+  pitcherId:
+    defensiveAlignment?.P ??
+    null,
+
+  eventType:
+    enginePlayType,
+
+  label,
+
+  extraEventData: {
+    player_id:
+      batter.id,
+
+    outs_recorded:
+      result.metadata
+        ?.outsRecorded ?? 0,
+
+    runs:
+      result.metadata
+        ?.runsScored ?? 0,
+
+    rbi:
+      result.metadata
+        ?.rbiCount ?? 0,
+
+    details: {
+      ...details,
+
+      playId:
+        playEvent.id,
+
+      runnerAdvances:
+        result.metadata
+          ?.runnerAdvances,
+
+      fielding,
+    },
+  },
+})
+
+setShowOutResultDialog(false)
+
+return
+}
 
                   await handleGameAction({
                     game,
@@ -2027,6 +2252,69 @@ label: `${resolution.playType} - ${batter.name}`,
 >
   Finish Game
 </Button>
+
+{regulationComplete && (
+  <div className="
+    fixed inset-0 z-[100]
+    flex items-center justify-center
+    bg-black/80 p-4
+  ">
+    <div className="
+      w-full max-w-md
+      rounded-3xl
+      bg-green-900
+      p-5
+      text-scoreboard-cream
+      shadow-2xl
+    ">
+      <div className="text-center">
+        <div className="scoreboard-label">
+          Regulation Complete
+        </div>
+
+        <div className="mt-2 text-3xl font-black">
+          6 Innings Complete
+        </div>
+
+        <div className="mt-2 text-sm opacity-70">
+          End the game or continue
+          to extra innings.
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        <Button
+          className="
+            min-h-16
+            w-full
+            text-lg
+            font-bold
+          "
+          onClick={
+            handleEndAtRegulation
+          }
+        >
+          End Game
+        </Button>
+
+        <Button
+          variant="secondary"
+          className="
+            min-h-14
+            w-full
+            text-base
+            font-bold
+          "
+          onClick={
+            handleContinueExtraInnings
+          }
+        >
+          Continue to Extra Innings
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
       </div>
     </main>
   );

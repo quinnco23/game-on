@@ -110,6 +110,32 @@ export function CountControls({
           engineGameState,
           playEvent
         )
+
+        console.log("GROUNDOUT RUN DEBUG:", {
+          runnerDecisions,
+          runsScored:
+            result.metadata?.runsScored,
+          rbiCount:
+            result.metadata?.rbiCount,
+          batterStats:
+            result.metadata?.batterStats,
+          runnerAdvances:
+            result.metadata?.runnerAdvances,
+        })
+
+        console.log(
+          "WALK RESULT STATS:",
+          {
+            batterStats:
+              result.metadata?.batterStats,
+        
+            pitcherStats:
+              result.metadata?.pitcherStats,
+        
+            fullMetadata:
+              result.metadata,
+          }
+        )
   
       if (!result.ok) {
         throw new Error(
@@ -255,7 +281,8 @@ export function CountControls({
   
     onSwingingStrike()
   }
-  
+
+
  
   return (
     <Card className="rounded-3xl bg-white/10 border-white/10 text-scoreboard-cream">
@@ -270,27 +297,70 @@ export function CountControls({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 "> 
-  <Button onClick={handleBall} >
+        <div className="grid grid-cols-2 gap-3">
+  <Button
+    className="
+      min-h-16
+      px-3
+      text-lg
+      font-bold
+      touch-manipulation
+    "
+    onClick={handleBall}
+  >
     {walkLikely
       ? "Ball 4 / Walk"
       : "Ball"}
   </Button>
 
-  <Button onClick={handleCalledStrike}>
+  <Button
+    className="
+      min-h-16
+      px-3
+      text-lg
+      font-bold
+      touch-manipulation
+    "
+    onClick={handleCalledStrike}
+  >
     Called Strike
   </Button>
 
-  <Button onClick={handleSwingingStrike}>
+  <Button
+    className="
+      min-h-16
+      px-3
+      text-lg
+      font-bold
+      touch-manipulation
+    "
+    onClick={handleSwingingStrike}
+  >
     Swinging Strike
   </Button>
 
-  <Button onClick={onFoul}>
+  <Button
+    className="
+      min-h-16
+      px-3
+      text-lg
+      font-bold
+      touch-manipulation
+    "
+    onClick={onFoul}
+  >
     Foul
   </Button>
 
   <Button
-    className="col-span-2"
+    className="
+      col-span-2
+      min-h-16
+      px-3
+      text-xl
+      font-bold
+      touch-manipulation
+    "
     onClick={onInPlay}
   >
     In Play

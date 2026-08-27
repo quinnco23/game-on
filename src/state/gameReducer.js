@@ -48,6 +48,14 @@ export function gameReducer(state, action) {
           [homeTeam]: 0,
           [awayTeam]: 0,
         },
+
+        gameRules:
+  action.gameRules ?? {
+    innings: 6,
+    timeLimitMinutes: 100,
+    timeLimitRule: "no_new_inning",
+    allowExtraInnings: false,
+  },
     
         stats: createEmptyGameStats(),
       }

@@ -15,6 +15,7 @@ import { createGame } from "../services/gamesService"
 import { saveLineup, getTeamPlayers } from "../services/playersService"
 import { getTeams } from "@/services/teamService"
 import { resolveLineupPlayers } from "../services/playersService"
+import { GameFormatSelector } from "./GameFormatSelector"
 
 
 
@@ -41,6 +42,34 @@ export default function GameSetupScreen({ game, onStart }) {
   const [awayLineup, setAwayLineup] =
     useState([])
 
+    const [gameRules, setGameRules] =
+  useState({
+    innings: 6,
+    timeLimitMinutes: 100,
+    timeLimitRule: "no_new_inning",
+    allowExtraInnings: false,
+  })
+
+
+    function swapHomeAway() {
+      const previousHomeTeamId =
+        homeTeamId
+    
+      const previousHomeRoster =
+        homeRoster
+    
+      const previousHomeLineup =
+        homeLineup
+    
+      setHomeTeamId(awayTeamId)
+      setAwayTeamId(previousHomeTeamId)
+    
+      setHomeRoster(awayRoster)
+      setAwayRoster(previousHomeRoster)
+    
+      setHomeLineup(awayLineup)
+      setAwayLineup(previousHomeLineup)
+    }
 
 useEffect(() => {
   async function loadTeams() {
@@ -177,12 +206,30 @@ const homeTeam =
           setLineup={setAwayLineup}
         />
       </section>
-
+      <Button
+  type="button"
+  variant="secondary"
+  className="
+    w-full
+    rounded-none
+    border
+    border-scoreboard-cream/30
+    py-3
+    font-bold
+  "
+  disabled={
+    !homeTeamId ||
+    !awayTeamId
+  }
+  onClick={swapHomeAway}
+>
+  ⇅ Swap Home / Away
+</Button>
       <label className="block space-y-2">
         <span className="scoreboard-label">
           Home Team
         </span>
-
+     
         <select
   className="scoreboard-input w-full"
   value={homeTeamId}
@@ -215,6 +262,11 @@ const homeTeam =
       </section>
 
       <div className="space-y-3 border-t-2 border-scoreboard-red pt-5">
+
+      <GameFormatSelector
+  value={gameRules}
+  onChange={setGameRules}
+/>
       <Button
   disabled={!canStartGame}
   className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
@@ -354,6 +406,8 @@ const homeTeam =
 
         homeRoster,
         awayRoster,
+
+        gameRules,
       })
     } catch (error) {
       console.error(

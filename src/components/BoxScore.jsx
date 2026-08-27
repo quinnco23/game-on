@@ -37,7 +37,7 @@ export function BoxScore({
       "3B": stats.triples ?? 0,
       HR: stats.homeRuns ?? 0,
       RBI: stats.rbi ?? 0,
-      BB: stats.walksAllowed ?? 0,
+      BB: stats.walks ?? 0,
       SO: stats.strikeouts ?? 0,
       ROE: stats.reachedOnError ?? 0,
       FC: stats.fieldersChoices ?? 0,

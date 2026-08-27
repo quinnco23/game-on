@@ -22,6 +22,7 @@ import { supabase } from "../lib/supabase"
 import {
   getGamePitchEvents,
 } from "../services/pitchEventsService"
+import { LiveGamePanel } from "./LiveGamePanel"
 
 function GameSummary({ game }) {
     const events = game.events ?? []
@@ -234,6 +235,9 @@ export function GameDetailScreen() {
     gameRecord.state ??
     gameRecord.game_state ??
     {}
+    const isLive =
+  gameRecord.status === "scoring" ||
+  game.status === "scoring"
 
   const awayLineup =
     game.lineups?.[game.awayTeam] ?? []
@@ -382,101 +386,105 @@ const currentPitcher =
       /> */}
       <section className="space-y-3">
     
-      <LiveGameHeader
-  game={game}
-  currentBatter={currentBatter}
-  currentPitcher={currentPitcher}
-  pitchCount={pitchCount}
-  liveCount={liveCount}
-/>
+      {isLive && (
+  <section className="space-y-6">
 
+{isLive && (
+  <LiveGamePanel
+    game={game}
+    currentBatter={currentBatter}
+    currentPitcher={currentPitcher}
+    pitchCount={pitchCount}
+    liveCount={liveCount}
+    pitches={currentAtBatPitches}
+  />
+)}
 
+    {/* Current At Bat */}
+    {/* <section className="space-y-3">
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="scoreboard-label text-scoreboard-amber">
+            At Bat
+          </div>
 
-<StrikeZoneTracker
-  pitches={currentAtBatPitches}
-  batter={currentBatter}
-  liveCount={liveCount}
-/>
-<section className="space-y-3">
-  <div className="flex items-end justify-between">
-    <div>
-      <div className="scoreboard-label text-scoreboard-amber">
-        At Bat
+          <h2 className="scoreboard-title mt-1 text-xl">
+            #{currentBatter?.number || "—"}{" "}
+            {currentBatter?.name ?? "Batter"}
+          </h2>
+        </div>
+
+        <div className="text-right">
+          <div className="scoreboard-label">
+            Count
+          </div>
+
+          <div className="scoreboard-number text-2xl">
+            {liveCount.balls}-
+            {liveCount.strikes}
+          </div>
+        </div>
       </div>
 
-      <h2 className="scoreboard-title mt-1 text-xl">
-        #{currentBatter?.number || "—"}{" "}
-        {currentBatter?.name ?? "Batter"}
-      </h2>
-    </div>
+      <div className="scoreboard-panel overflow-hidden">
+        {currentAtBatPitches.length === 0 ? (
+          <div className="p-4 text-sm opacity-60">
+            No pitches recorded this at-bat.
+          </div>
+        ) : (
+          [...currentAtBatPitches]
+            .sort(
+              (a, b) =>
+                b.sequence - a.sequence
+            )
+            .map((pitch, index) => {
+              const isLatest =
+                index === 0
 
-    <div className="text-right">
-      <div className="scoreboard-label">
-        Count
-      </div>
+              return (
+                <div
+                  key={pitch.id}
+                  className={`
+                    flex
+                    items-center
+                    justify-between
+                    border-b
+                    border-scoreboard-cream/20
+                    px-4 py-3
+                    last:border-b-0
+                    ${
+                      isLatest
+                        ? "bg-scoreboard-amber/10"
+                        : ""
+                    }
+                  `}
+                >
+                  <div>
+                    <div className="font-bold">
+                      Pitch {pitch.sequence}
+                    </div>
 
-      <div className="scoreboard-number text-2xl">
-  {liveCount.balls}-
-  {liveCount.strikes}
-</div>
-    </div>
-  </div>
+                    <div className="scoreboard-label mt-1 opacity-60">
+                      {pitch.balls_before}-
+                      {pitch.strikes_before}
+                      {" "}before pitch
+                    </div>
+                  </div>
 
-  <div className="scoreboard-panel overflow-hidden">
-    {currentAtBatPitches.length === 0 ? (
-      <div className="p-4 text-sm opacity-60">
-        No pitches recorded this at-bat.
-      </div>
-    ) : (
-      [...currentAtBatPitches]
-  .sort((a, b) => b.sequence - a.sequence)
-  .map(
-        (pitch, index) => {
-          const isLatest =
-  index === 0
-
-          return (
-            <div
-              key={pitch.id}
-              className={`
-                flex
-                items-center
-                justify-between
-                border-b
-                border-scoreboard-cream/20
-                px-4 py-3
-                last:border-b-0
-                ${
-                  isLatest
-                    ? "bg-scoreboard-amber/10"
-                    : ""
-                }
-              `}
-            >
-              <div>
-                <div className="font-bold">
-                  Pitch {pitch.sequence}
+                  <div className="scoreboard-label text-scoreboard-amber">
+                    {formatPitchResult(
+                      pitch.result
+                    )}
+                  </div>
                 </div>
+              )
+            })
+        )}
+      </div>
+    </section> */}
 
-                <div className="scoreboard-label mt-1 opacity-60">
-                  {pitch.balls_before}-
-                  {pitch.strikes_before}
-                  {" "}before pitch
-                </div>
-              </div>
-
-              <div className="scoreboard-label text-scoreboard-amber">
-                {formatPitchResult(
-                  pitch.result
-                )}
-              </div>
-            </div>
-          )
-        }
-      )
-    )}
-  </div>
-</section>
+  </section>
+)}
 
   <h2 className="scoreboard-title text-xl">
     Linescore

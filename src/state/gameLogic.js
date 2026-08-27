@@ -76,33 +76,88 @@ export function logEvent(state, event) {
 }
 
 export function applyWalk(state) {
-  const battingTeam = getBattingTeam(state)
-  const batter = getCurrentBatter(state)
-  const bases = { ...state.bases }
-  let nextState = resetCount(state)
+  const battingTeam =
+    getBattingTeam(state)
+
+  const batter =
+    getCurrentBatter(state)
+
+  const bases = {
+    ...state.bases,
+  }
+
+  let nextState =
+    resetCount(state)
 
   if (bases.first) {
     if (bases.second) {
       if (bases.third) {
-        nextState = scoreRun(nextState, battingTeam, 1)
+        nextState =
+          scoreRun(
+            nextState,
+            battingTeam,
+            1
+          )
       }
-      bases.third = bases.second
+
+      bases.third =
+        bases.second
     }
-    bases.second = bases.first
+
+    bases.second =
+      bases.first
   }
 
-  bases.first = batter
+  bases.first =
+    batter
 
-  const next = advanceBattingOrder({
-    ...nextState,
-    bases,
-  })
+  const next =
+    advanceBattingOrder({
+      ...nextState,
+      bases,
+    })
 
-  return logEvent(next, {
-    event_type: "walk",
-    label: `Walk - ${formatPlayer(batter)}`,
-    player_id: batter.id,
-  })
+  const currentBatterStats =
+    next.stats?.batters?.[
+      batter.id
+    ] ?? {}
+
+  const nextWithStats = {
+    ...next,
+
+    stats: {
+      ...(next.stats ?? {}),
+
+      batters: {
+        ...(next.stats?.batters ?? {}),
+
+        [batter.id]: {
+          ...currentBatterStats,
+
+          pa:
+            (currentBatterStats.pa ?? 0) +
+            1,
+
+          bb:
+            (currentBatterStats.bb ?? 0) +
+            1,
+        },
+      },
+    },
+  }
+
+  return logEvent(
+    nextWithStats,
+    {
+      event_type: "walk",
+      label:
+        `Walk - ${formatPlayer(
+          batter
+        )}`,
+      player_id:
+        batter.id,
+    }
+  )
 }
 
 export function applyHit(state, label, basesEarned) {
