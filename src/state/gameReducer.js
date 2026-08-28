@@ -256,9 +256,13 @@ const nextBases =
           },
       
           outs: result.state.outs,
-          half: result.state.half,
-          inning: result.state.inning,
-          version: result.state.version,
+half: result.state.half,
+inning: result.state.inning,
+
+runsThisHalf:
+  result.state.runsThisHalf ?? 0,
+
+version: result.state.version,
       
           balls:
             endsPlateAppearance

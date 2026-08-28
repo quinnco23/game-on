@@ -250,43 +250,114 @@ const currentPitcher =
           saveInFlightRef.current =
             true
     
-          try {
-            while (
-              pendingGameRef.current
-            ) {
-              const gameToSave =
+            try {
+              while (
                 pendingGameRef.current
-    
-              pendingGameRef.current =
-                null
-    
-              console.time(
-                "GAME SNAPSHOT SAVE"
-              )
-    
-              const snapshot =
-              createPersistedGameSnapshot(
-                gameToSave
+              ) {
+                const gameToSave =
+                  pendingGameRef.current
+            
+                pendingGameRef.current =
+                  null
+            
+                console.time(
+                  "GAME SNAPSHOT SAVE"
+                )
+            
+                console.log(
+                  "SNAPSHOT SAVE START:",
+                  {
+                    operation:
+                      "gameSnapshot",
+            
+                    gameId:
+                      gameToSave.id,
+            
+                    inning:
+                      gameToSave.inning,
+            
+                    half:
+                      gameToSave.half,
+            
+                    version:
+                      gameToSave.version,
+            
+                    online:
+                      navigator.onLine,
+                  }
+                )
+            
+                const snapshot =
+                  createPersistedGameSnapshot(
+                    gameToSave
+                  )
+            
+                await updateGameState(
+                  snapshot.id,
+                  snapshot
+                )
+            
+                console.log(
+                  "SNAPSHOT SAVE OK:",
+                  {
+                    gameId:
+                      snapshot.id,
+            
+                    inning:
+                      snapshot.inning,
+            
+                    half:
+                      snapshot.half,
+            
+                    version:
+                      snapshot.version,
+                  }
+                )
+            
+                console.timeEnd(
+                  "GAME SNAPSHOT SAVE"
+                )
+              }
+            } catch (error) {
+              console.error(
+                "SNAPSHOT SAVE FAILED:",
+                {
+                  operation:
+                    "gameSnapshot",
+            
+                  gameId:
+                    game?.id,
+            
+                  inning:
+                    game?.inning,
+            
+                  half:
+                    game?.half,
+            
+                  version:
+                    game?.version,
+            
+                  online:
+                    navigator.onLine,
+            
+                  errorName:
+                    error?.name,
+            
+                  errorMessage:
+                    error?.message,
+            
+                  error,
+                }
               )
             
-            await updateGameState(
-              snapshot.id,
-              snapshot
-            )
-    
-              console.timeEnd(
-                "GAME SNAPSHOT SAVE"
+              console.error(
+                "Could not persist game state:",
+                error
               )
+            } finally {
+              saveInFlightRef.current =
+                false
             }
-          } catch (error) {
-            console.error(
-              "Could not persist game state:",
-              error
-            )
-          } finally {
-            saveInFlightRef.current =
-              false
-          }
         }, 400)
     
       return () => {
@@ -518,6 +589,11 @@ const currentPitcher =
         },
 
         version: game.version ?? 0,
+
+        gameRules: game.gameRules,
+
+runsThisHalf:
+  game.runsThisHalf ?? 0,
       };
 
       const playEvent = {
@@ -545,6 +621,17 @@ const currentPitcher =
         throw new Error(
           result.errors?.[0]?.message ?? "Could not record the stolen base."
         );
+      }
+      result.state = {
+        ...result.state,
+      
+        score: {
+          [game.homeTeam]:
+            result.state.score?.home ?? 0,
+      
+          [game.awayTeam]:
+            result.state.score?.away ?? 0,
+        },
       }
 
       await handleGameAction({
@@ -636,6 +723,18 @@ const currentPitcher =
         throw new Error(
           result.errors?.[0]?.message ?? "Could not record the passed ball."
         );
+      }
+
+      result.state = {
+        ...result.state,
+      
+        score: {
+          [game.homeTeam]:
+            result.state.score?.home ?? 0,
+      
+          [game.awayTeam]:
+            result.state.score?.away ?? 0,
+        },
       }
 
       const label =
@@ -1946,10 +2045,9 @@ label: `${resolution.playType} - ${batter.name}`,
         batter: "out",
       }
 
-    : isError
-    ? getForcedAdvanceDecisions(
-        game.bases
-      )
+      : isError
+      ? details.runnerDecisions ??
+        getForcedAdvanceDecisions(game.bases)
 
     : (
         eventType === "groundout" ||

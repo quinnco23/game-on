@@ -6,7 +6,32 @@ import { derivePitcherStats } from "./derivePitcherStats";
 import { deriveFielderStats } from "./deriveFielderStats";
 import { deriveRunnerStats } from "./deriveRunnerStats";
 
-export function applyPlay(gameState, playResult, context = {}) {
+export function applyPlay(
+  gameState,
+  playResult,
+  context = {}
+) {
+  console.log(
+    "🔥 APPLY PLAY ENGINE FIRED",
+    {
+      playType:
+        playResult?.playType,
+
+      inning:
+        gameState?.inning,
+
+      half:
+        gameState?.half,
+
+      runsThisHalf:
+        gameState?.runsThisHalf,
+
+      gameRules:
+        gameState?.gameRules,
+    }
+  )
+
+  // existing code...
   if (!gameState) {
    
 
@@ -83,22 +108,77 @@ export function applyPlay(gameState, playResult, context = {}) {
   const outsRecorded = runnerResult.outsRecorded ?? 0;
   const runnerAdvances = runnerResult.runnerAdvances ?? [];
 
-  const totalOuts = (gameState.outs ?? 0) + outsRecorded;
-  const halfInningEnded = totalOuts >= 3;
+  const totalOuts =
+  (gameState.outs ?? 0) + outsRecorded;
+
+const endedByOuts =
+  totalOuts >= 3;
 
   const thirdOutWasForce =
-    halfInningEnded &&
-    context.thirdOut?.type === "force";
+  endedByOuts &&
+  context.thirdOut?.type === "force";
 
-  const runScoredAfterThirdOut =
-    halfInningEnded &&
-    context.thirdOut?.type === "tag" &&
-    context.thirdOut?.runScoredBeforeOut === false;
+const runScoredAfterThirdOut =
+  endedByOuts &&
+  context.thirdOut?.type === "tag" &&
+  context.thirdOut?.runScoredBeforeOut === false;
 
   const runsScored =
     thirdOutWasForce || runScoredAfterThirdOut
       ? 0
       : rawRunsScored;
+
+      const previousRunsThisHalf =
+  gameState.runsThisHalf ?? 0;
+
+const runsThisHalf =
+  previousRunsThisHalf + runsScored;
+
+const battingSide =
+  gameState.half === "top"
+    ? "away"
+    : "home";
+
+const runLimitRules =
+  gameState.gameRules?.runLimit;
+
+const teamRunLimit =
+  runLimitRules?.[battingSide];
+
+  console.log("RUN LIMIT CHECK:", {
+    inning: gameState.inning,
+    half: gameState.half,
+    battingSide,
+  
+    gameRules:
+      gameState.gameRules,
+  
+    runLimitRules,
+    teamRunLimit,
+  
+    previousRunsThisHalf,
+    runsScored,
+    runsThisHalf,
+  });
+
+const runLimitEnabled =
+  runLimitRules?.enabled === true &&
+  teamRunLimit?.enabled === true;
+
+const endedByRunLimit =
+  runLimitEnabled &&
+  runsThisHalf >=
+    (teamRunLimit?.runs ?? Infinity);
+
+const halfInningEnded =
+  endedByOuts || endedByRunLimit;
+
+const halfInningEndReason =
+  endedByOuts
+    ? "threeOuts"
+    : endedByRunLimit
+    ? "runLimit"
+    : null;
 
   const nextHalf = halfInningEnded
     ? gameState.half === "top"
@@ -143,23 +223,35 @@ const rbiCount =
     ? runsScored
     : 0
 
-  nextState = {
-    ...nextState,
-
-    bases: halfInningEnded
-      ? {
-          first: null,
-          second: null,
-          third: null,
-        }
-      : runnerResult.bases,
-
-    score: nextScore,
-    outs: halfInningEnded ? 0 : totalOuts,
-    half: nextHalf,
-    inning: nextInning,
-    version: previousVersion + 1,
-  };
+    nextState = {
+      ...nextState,
+    
+      bases: halfInningEnded
+        ? {
+            first: null,
+            second: null,
+            third: null,
+          }
+        : runnerResult.bases,
+    
+      score: nextScore,
+    
+      outs:
+        halfInningEnded
+          ? 0
+          : totalOuts,
+    
+      runsThisHalf:
+        halfInningEnded
+          ? 0
+          : runsThisHalf,
+    
+      half: nextHalf,
+      inning: nextInning,
+    
+      version:
+        previousVersion + 1,
+    };
 
   events.push(...runnerAdvances);
 
@@ -179,6 +271,10 @@ const rbiCount =
   
     thirdOutWasForce,
     halfInningEnded,
+    halfInningEndReason,
+    endedByOuts,
+    endedByRunLimit,
+    runsThisHalf,
     runScoredAfterThirdOut,
   
     rbiCount,

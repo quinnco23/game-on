@@ -17,7 +17,45 @@ import { getTeams } from "@/services/teamService"
 import { resolveLineupPlayers } from "../services/playersService"
 import { GameFormatSelector } from "./GameFormatSelector"
 
+const defaultGameRules = {
+  innings: 6,
 
+  timeLimit: {
+    enabled: false,
+    minutes: 100,
+  },
+
+  runLimit: {
+    enabled: false,
+
+    home: {
+      enabled: true,
+      runs: 5,
+    },
+
+    away: {
+      enabled: true,
+      runs: 5,
+    },
+
+    lastInningUnlimited: false,
+  },
+
+  mercyRule: {
+    enabled: false,
+
+    thresholds: [
+      {
+        afterInning: 3,
+        runDifferential: 15,
+      },
+      {
+        afterInning: 4,
+        runDifferential: 10,
+      },
+    ],
+  },
+}
 
 
 export default function GameSetupScreen({ game, onStart }) {
@@ -42,13 +80,52 @@ export default function GameSetupScreen({ game, onStart }) {
   const [awayLineup, setAwayLineup] =
     useState([])
 
-    const [gameRules, setGameRules] =
-  useState({
-    innings: 6,
-    timeLimitMinutes: 100,
-    timeLimitRule: "no_new_inning",
-    allowExtraInnings: false,
-  })
+    const [gameRules, setGameRules] = useState({
+      // Regulation
+      innings: 6,
+    
+      // Time limit
+      timeLimitMinutes: 100,
+      timeLimitRule: "no_new_inning",
+    
+      // Extra innings
+      allowExtraInnings: false,
+    
+      // Run limit per half-inning
+      runLimit: {
+        enabled: false,
+    
+        home: {
+          enabled: true,
+          runs: 5,
+        },
+    
+        away: {
+          enabled: true,
+          runs: 5,
+        },
+    
+        lastInningUnlimited: false,
+      },
+    
+      // Mercy / run-differential rule
+      mercyRule: {
+        enabled: false,
+    
+        thresholds: [
+          {
+            afterInning: 3,
+            runDifferential: 15,
+          },
+          {
+            afterInning: 4,
+            runDifferential: 10,
+          },
+        ],
+      },
+    })
+
+  
 
 
     function swapHomeAway() {

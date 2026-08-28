@@ -73,5 +73,7 @@ export const initialGame = {
   pitchEvents: [],
 
   events: [],
+
+  runsThisHalf: 0,
 }
 

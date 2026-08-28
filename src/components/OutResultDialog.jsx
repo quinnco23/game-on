@@ -235,7 +235,8 @@ export function OutResultDialog({
         selectedResult.eventType === "groundout" ||
         selectedResult.eventType === "sacrificeBunt" ||
         selectedResult.eventType === "flyout" ||
-        selectedResult.eventType === "lineout"
+        selectedResult.eventType === "lineout" ||
+        selectedResult.eventType === "error"
           ? runnerDecisions
           : null,
 
@@ -348,6 +349,120 @@ export function OutResultDialog({
               </Button>
             ))}
           </div>
+
+          {selectedResult.eventType === "error" && (
+  <div className="space-y-4">
+    <div>
+      <div className="mb-2 font-bold">
+        Batter reaches
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {["first", "second", "third"].map((base) => (
+          <Button
+            key={base}
+            variant={
+              errorBatterDestination === base
+                ? "default"
+                : "secondary"
+            }
+            className="rounded-xl"
+            onClick={() =>
+              setErrorBatterDestination(base)
+            }
+          >
+            {baseLabel(base)}
+          </Button>
+        ))}
+      </div>
+    </div>
+
+    {bases.third && (
+      <div>
+        <div className="mb-2 font-bold">
+          {bases.third.name} on 3rd
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant={
+              runnerDecisions.third === "home"
+                ? "secondary"
+                : "default"
+            }
+            onClick={() =>
+              setRunnerDecision("third", "hold")
+            }
+          >
+            Hold
+          </Button>
+
+          <Button
+            variant={
+              runnerDecisions.third === "home"
+                ? "default"
+                : "secondary"
+            }
+            onClick={() =>
+              setRunnerDecision("third", "home")
+            }
+          >
+            Score
+          </Button>
+        </div>
+      </div>
+    )}
+
+    {bases.second && (
+      <div>
+        <div className="mb-2 font-bold">
+          {bases.second.name} on 2nd
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            variant={
+              runnerDecisions.second === "hold"
+                ? "default"
+                : "secondary"
+            }
+            onClick={() =>
+              setRunnerDecision("second", "hold")
+            }
+          >
+            Hold
+          </Button>
+
+          <Button
+            variant={
+              runnerDecisions.second === "third"
+                ? "default"
+                : "secondary"
+            }
+            onClick={() =>
+              setRunnerDecision("second", "third")
+            }
+          >
+            3rd
+          </Button>
+
+          <Button
+            variant={
+              runnerDecisions.second === "home"
+                ? "default"
+                : "secondary"
+            }
+            onClick={() =>
+              setRunnerDecision("second", "home")
+            }
+          >
+            Score
+          </Button>
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
           <div>
             <div className="font-bold mb-2 scoreboard-label ">
@@ -555,7 +670,7 @@ export function OutResultDialog({
             </div>
           )}
 
-          {selectedResult.eventType === "error" && (
+          {/* {selectedResult.eventType === "error" && (
             <div>
               <div className="mb-2 font-bold">Batter reaches</div>
 
@@ -574,7 +689,7 @@ export function OutResultDialog({
                 ))}
               </div>
             </div>
-          )}
+          )} */}
 
           {selectedResult.eventType === "fielders_choice" && (
             <div className="space-y-4">

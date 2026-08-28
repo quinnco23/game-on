@@ -28,11 +28,6 @@ export async function finishGame(
   gameId,
   state
 ) {
-  console.log(
-    "FINISH GAME SERVICE:",
-    gameId
-  )
-
   const { error } = await supabase
     .from("games")
     .update({
@@ -40,14 +35,7 @@ export async function finishGame(
     })
     .eq("id", gameId)
 
-  if (error) {
-    console.error(
-      "FINISH GAME DB ERROR:",
-      error
-    )
-
-    throw error
-  }
+  if (error) throw error
 
   return {
     id: gameId,
