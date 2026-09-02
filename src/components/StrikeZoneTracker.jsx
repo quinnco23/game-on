@@ -1,3 +1,5 @@
+
+
 function MiniBase({
   occupied,
   className,
@@ -153,14 +155,12 @@ function getPitchType(result) {
   export function StrikeZoneTracker({
     pitches = [],
     batter,
-  
     liveCount = {
       balls: 0,
       strikes: 0,
     },
-  
-    game,
-    currentPitcher,
+    bases = {},
+    currentPitcher = null,
     pitchCount = 0,
   }) {
     const sortedPitches =
@@ -193,41 +193,41 @@ function getPitchType(result) {
     py-3
   "
 >
-  <MiniBases bases={game?.bases} />
+<MiniBases bases={bases} />
 
-  <div className="min-w-0">
-    <div className="scoreboard-label">
-      Pitching
-    </div>
-
-    <div className="mt-1 truncate font-bold">
-      #{currentPitcher?.number || "—"}{" "}
-      {currentPitcher?.name ?? "Pitcher"}
-    </div>
-
-    <div className="mt-0.5 text-xs opacity-60">
-      {pitchCount}{" "}
-      {pitchCount === 1
-        ? "pitch"
-        : "pitches"}
-    </div>
+<div>
+  <div className="scoreboard-label">
+    Pitching
   </div>
+
+  <div className="font-bold">
+    #{currentPitcher?.number || "—"}{" "}
+    {currentPitcher?.name ?? "Pitcher"}
+  </div>
+
+  <div className="text-xs opacity-60">
+    {pitchCount} pitches
+  </div>
+</div>
 </div>
   {/* TRACKER */}
 
   <div
-    className="
-      grid
-      grid-cols-[90px_1fr]
-      items-end
-      gap-2
-      px-4 py-6
-      sm:grid-cols-[130px_1fr]
-    "
-  >
+  className="
+    grid
+    w-fit
+    grid-cols-[90px_1fr]
+    items-end
+    gap-2
+    px-4
+    py-6
+    mx-auto
+    sm:grid-cols-[130px_1fr]
+  "
+>
     {/* BATTER FIGURE */}
 
-    <BatterFigure />
+    {/* <BatterFigure /> */}
 
     {/* STRIKE ZONE AREA */}
 

@@ -100,11 +100,11 @@ export function HomeScreen({
       <div className="mx-auto max-w-3xl space-y-5">
         <header className="border-b-2 border-scoreboard-red pb-4  ">
           <p className="scoreboard-label  text-3xl">
-            SCSA
+            MBLB
           </p>
 
           <h1 className=" mt-1 text-sm">
-            Powered by <span className="text-scoreboard-red">gameOnAI </span>
+            Powered by <span className="text-scoreboard-red">gameOn </span>
           </h1>
 
           <button

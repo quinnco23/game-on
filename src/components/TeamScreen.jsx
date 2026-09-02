@@ -4,7 +4,7 @@ import {
   useParams,
 } from "react-router-dom"
 
-import { getTeam } from "@/services/teamService"
+import { getTeam, updateTeam } from "@/services/teamService"
 import {
   createPlayer,
   getTeamPlayers,
@@ -22,6 +22,12 @@ export function TeamScreen() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  const [editingTeam, setEditingTeam] =
+  useState(false)
+
+const [editTeamName, setEditTeamName] =
+  useState("")
 
   const [newPlayer, setNewPlayer] = useState({
     name: "",
@@ -42,6 +48,8 @@ const [editPlayer, setEditPlayer] =
     bats: "",
     throws: "",
   })
+
+  
 
   async function loadTeam() {
     try {
@@ -73,6 +81,39 @@ const [editPlayer, setEditPlayer] =
   useEffect(() => {
     loadTeam()
   }, [teamId])
+
+  async function handleSaveTeam() {
+    const name = editTeamName.trim()
+  
+    if (!name) {
+      alert("Enter a team name.")
+      return
+    }
+  
+    try {
+      setSaving(true)
+  
+      const updatedTeam =
+        await updateTeam(teamId, {
+          name,
+        })
+  
+      setTeam(updatedTeam)
+      setEditingTeam(false)
+    } catch (error) {
+      console.error(
+        "Could not update team:",
+        error
+      )
+  
+      alert(
+        error.message ||
+          "Could not update team"
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
 
   function updateNewPlayer(field, value) {
     setNewPlayer((current) => ({
@@ -215,14 +256,79 @@ const [editPlayer, setEditPlayer] =
         </button>
 
         <div className="mt-4">
-          <div className="scoreboard-label">
-            Team
-          </div>
+  <div className="scoreboard-label">
+    Team
+  </div>
 
-          <h1 className="scoreboard-title mt-1 text-3xl">
-            {team?.name ?? "Team"}
-          </h1>
-        </div>
+  {!editingTeam ? (
+    <div
+      className="
+        mt-1
+        flex
+        items-center
+        justify-between
+        gap-3
+      "
+    >
+      <h1 className="scoreboard-title text-3xl">
+        {team?.name ?? "Team"}
+      </h1>
+
+      <button
+        type="button"
+        className="text-xs font-bold"
+        onClick={() => {
+          setEditTeamName(
+            team?.name ?? ""
+          )
+          setEditingTeam(true)
+        }}
+      >
+        Edit
+      </button>
+    </div>
+  ) : (
+    <div className="mt-3 space-y-2">
+      <input
+        className="scoreboard-input w-full"
+        value={editTeamName}
+        onChange={(e) =>
+          setEditTeamName(
+            e.target.value
+          )
+        }
+        placeholder="Team name"
+        autoFocus
+      />
+
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          className="scoreboard-button"
+          onClick={() =>
+            setEditingTeam(false)
+          }
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          disabled={saving}
+          className="
+            scoreboard-button
+            scoreboard-button-primary
+          "
+          onClick={handleSaveTeam}
+        >
+          {saving
+            ? "Saving..."
+            : "Save"}
+        </button>
+      </div>
+    </div>
+  )}
+</div>
       </header>
 
 

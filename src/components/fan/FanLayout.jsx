@@ -40,12 +40,12 @@ import {
             "
           >
             <div className="scoreboard-label text-scoreboard-amber">
-              SCYA Baseball
+              MBL Baseball
             </div>
   
             <div className="mt-1 flex items-end justify-between gap-4">
               <h1 className="scoreboard-title text-3xl md:text-4xl">
-                The Berds
+                The Berds 10u
               </h1>
   
               <div className="scoreboard-label text-right opacity-60">

@@ -21,45 +21,67 @@ import { ScheduleGameScreen } from "./components/ScheduleGameScreen";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<TapScorePrototype />} />
-      <Route path="/teams" element={<TeamsScreen />} />
-      <Route path="/teams/new" element={<NewTeamScreen />} />
-      <Route path="/teams/:teamId" element={<TeamScreen />} />
-      <Route path="/stats" element={<statScreen />} />
-      <Route path="/games/:gameId" element={<GameDetailScreen />} />
-      <Route path="/games/schedule" element={<ScheduleGameScreen />} />
-      
+    <Route
+      path="/"
+      element={<TapScorePrototype />}
+    />
+  
+    <Route
+      path="/teams"
+      element={<TeamsScreen />}
+    />
+  
+    <Route
+      path="/teams/new"
+      element={<NewTeamScreen />}
+    />
+  
+    <Route
+      path="/teams/:teamId"
+      element={<TeamScreen />}
+    />
+  
+    <Route
+      path="/games/:gameId"
+      element={<GameDetailScreen />}
+    />
+  
+    <Route
+      path="/games/schedule"
+      element={<ScheduleGameScreen />}
+    />
+  
+    {/* FAN PAGES */}
+    <Route
+      path="/fan"
+      element={<FanLayout />}
+    >
       <Route
-  path="/fan"
-  element={<FanLayout />}
->
-  <Route
-    index
-    element={<FanHomeScreen />}
-  />
-
-  <Route
-    path="standings"
-    element={<StandingsScreen />}
-  />
-
-  <Route
-    path="stats"
-    element={<StatsScreen />}
-  />
-
-  <Route
-    path="teams"
-    element={<PublicTeamsScreen />}
-  />
-</Route>
-
-<Route
-  path="/fan/games/:gameId"
-  element={<GameDetailScreen />}
-/>
-     
-    </Routes>
+        index
+        element={<FanHomeScreen />}
+      />
+  
+       <Route
+        path="standings"
+        element={<StandingsScreen />}
+      /> 
+  
+      <Route
+        path="stats"
+        element={<StatsScreen />}
+      />
+  
+      <Route
+        path="teams"
+        element={<PublicTeamsScreen />}
+      />
+    </Route>
+  
+    <Route
+      path="/fan/games/:gameId"
+      element={<GameDetailScreen />}
+    />
+  </Routes>
   );
 }
 

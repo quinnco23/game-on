@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 
-import { getStandings } from "@/services/standingsService"
+import {
+  getStandings,
+} from "../services/standingsService"
 
 export function StandingsScreen() {
   const [standings, setStandings] =

@@ -186,82 +186,23 @@ export function LiveGamePanel({
             ] ?? 0
           }
         />
-      </div>
+       </div>
 
-      {/* BASES + PITCHER */}
-      {/* <div className="
-        grid
-        grid-cols-[110px_1fr]
-        gap-4
-        border-b
-        border-scoreboard-cream/20
-        p-4
-      ">
-        <MiniBases
-          bases={game.bases}
-        />
+     
 
-        <div className="flex flex-col justify-center">
-          <div className="scoreboard-label">
-            Pitching
-          </div>
+   {/* STRIKE ZONE */}
+<div className="p-4">
+  <StrikeZoneTracker
+    pitches={pitches}
+    batter={currentBatter}
+    liveCount={liveCount}
+    bases={game.bases ?? {}}
+    currentPitcher={currentPitcher}
+    pitchCount={pitchCount}
+  />
+</div>
 
-          <div className="mt-1 font-bold">
-            #{currentPitcher?.number || "—"}{" "}
-            {currentPitcher?.name ?? "Pitcher"}
-          </div>
-
-          <div className="mt-1 text-sm opacity-60">
-            {pitchCount} pitches
-          </div>
-        </div>
-      </div> */}
-
-      {/* BATTER */}
-      {/* <div className="
-        flex
-        items-center
-        justify-between
-        gap-4
-        border-b
-        border-scoreboard-cream/20
-        px-4
-        py-3
-      ">
-        <div>
-          <div className="scoreboard-label">
-            At Bat
-          </div>
-
-          <div className="mt-1 font-bold">
-            #{currentBatter?.number || "—"}{" "}
-            {currentBatter?.name ?? "Batter"}
-          </div>
-        </div>
-
-        <div className="text-right">
-          <div className="scoreboard-label">
-            Count
-          </div>
-
-          <div className="scoreboard-number text-3xl">
-            {liveCount.balls}-
-            {liveCount.strikes}
-          </div>
-        </div>
-      </div> */}
-
-      {/* STRIKE ZONE */}
-      <div className="p-4">
-        
-        <StrikeZoneTracker
-          pitches={pitches}
-          batter={currentBatter}
-          liveCount={liveCount}
-        />
-      </div>
-
-    </section>
+</section>
   )
 }
 

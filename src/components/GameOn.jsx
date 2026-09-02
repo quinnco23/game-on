@@ -62,6 +62,7 @@ import {
  import {
   GameClock,
 } from "./GameClock"
+import { GameFeed } from "./GameFeed";
 
 // function FieldBase({ runner, label, className = "" }) {
 //   const occupied = Boolean(runner);
@@ -2264,7 +2265,11 @@ return
           />
         )}
 
-        <EventFeed events={game.events ?? []} />
+<GameFeed
+  events={game.events ?? []}
+  title="Game Feed"
+  compact
+/>
 
         <BoxScore
   title={game.awayTeam}

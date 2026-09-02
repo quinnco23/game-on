@@ -204,7 +204,7 @@ const homeHits =
           >
             {isFinal
               ? "View Game"
-              : "Resume Game"}
+              : "View"}
           </button>
         )}
       </section>

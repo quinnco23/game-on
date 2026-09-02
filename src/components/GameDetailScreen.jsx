@@ -23,6 +23,7 @@ import {
   getGamePitchEvents,
 } from "../services/pitchEventsService"
 import { LiveGamePanel } from "./LiveGamePanel"
+import { GameFeed } from "./GameFeed"
 
 function GameSummary({ game }) {
     const events = game.events ?? []
@@ -95,6 +96,8 @@ export function GameDetailScreen() {
 
   const [gameRecord, setGameRecord] =
     useState(null)
+    const [gameEvents, setGameEvents] =
+  useState([])
 
   const [loading, setLoading] =
     useState(true)
@@ -105,10 +108,30 @@ export function GameDetailScreen() {
           const [
             gameResult,
             pitchResult,
+            eventResult,
           ] = await Promise.all([
             getGameById(gameId),
             getGamePitchEvents(gameId),
+          
+            supabase
+              .from("events")
+              .select("*")
+              .eq("game_id", gameId)
+              .order("created_at", {
+                ascending: true,
+              }),
           ])
+
+          setGameRecord(gameResult)
+setPitchEvents(pitchResult)
+
+if (eventResult.error) {
+  throw eventResult.error
+}
+
+setGameEvents(
+  eventResult.data ?? []
+)
     
           setGameRecord(gameResult)
           setPitchEvents(pitchResult)
@@ -185,6 +208,61 @@ export function GameDetailScreen() {
       if (!gameId) return
     
       const channel = supabase
+        .channel(`game-events-${gameId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "events",
+            filter: `game_id=eq.${gameId}`,
+          },
+          (payload) => {
+            const newEvent =
+              payload.new
+    
+            console.log(
+              "LIVE GAME EVENT RECEIVED:",
+              newEvent
+            )
+    
+            setGameEvents(
+              (current) => {
+                const alreadyExists =
+                  current.some(
+                    (event) =>
+                      event.id ===
+                      newEvent.id
+                  )
+    
+                if (alreadyExists) {
+                  return current
+                }
+    
+                return [
+                  ...current,
+                  newEvent,
+                ]
+              }
+            )
+          }
+        )
+        .subscribe((status) => {
+          console.log(
+            "EVENT REALTIME STATUS:",
+            status
+          )
+        })
+    
+      return () => {
+        supabase.removeChannel(channel)
+      }
+    }, [gameId])
+
+    useEffect(() => {
+      if (!gameId) return
+    
+      const channel = supabase
         .channel(`game-state-${gameId}`)
         .on(
           "postgres_changes",
@@ -235,9 +313,15 @@ export function GameDetailScreen() {
     gameRecord.state ??
     gameRecord.game_state ??
     {}
-    const isLive =
-  gameRecord.status === "scoring" ||
-  game.status === "scoring"
+    const isFinished =
+    gameRecord.status === "final"
+  
+  const isLive =
+    !isFinished &&
+    (
+      gameRecord.status === "scoring" ||
+      game.status === "scoring"
+    )
 
   const awayLineup =
     game.lineups?.[game.awayTeam] ?? []
@@ -333,8 +417,17 @@ const defensiveSide =
 const defensiveRoster =
   game.gameRoster?.[defensiveTeam] ?? []
 
+  const latestPitchForGame =
+  [...pitchEvents]
+    .sort(
+      (a, b) =>
+        b.sequence - a.sequence
+    )[0] ?? null
+
 const currentPitcherId =
-  game.defense?.[defensiveSide]?.P ?? null
+  game.defense?.[defensiveSide]?.P ??
+  latestPitchForGame?.pitcher_id ??
+  null
 
 const currentPitcher =
   defensiveRoster.find(
@@ -385,11 +478,15 @@ const currentPitcher =
         }
       /> */}
       <section className="space-y-3">
+        
+        
+      <LineScore game={game} /> 
     
       {isLive && (
   <section className="space-y-6">
 
 {isLive && (
+  <>
   <LiveGamePanel
     game={game}
     currentBatter={currentBatter}
@@ -398,6 +495,14 @@ const currentPitcher =
     liveCount={liveCount}
     pitches={currentAtBatPitches}
   />
+
+  <GameFeed
+  limit={5}
+   events={gameEvents}
+  title="Game Feed"
+  compact
+/>
+</>
 )}
 
     {/* Current At Bat */}
@@ -486,11 +591,12 @@ const currentPitcher =
   </section>
 )}
 
-  <h2 className="scoreboard-title text-xl">
+  {/* <h2 className="scoreboard-title text-xl">
     Linescore
-  </h2>
+  </h2> */}
 
-  <LineScore game={game} />
+  
+
 </section>
 
       <section className="space-y-4">

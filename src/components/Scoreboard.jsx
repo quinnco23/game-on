@@ -66,7 +66,6 @@ export function Scoreboard({ game }) {
         <div className="scoreboard-number mt-1 text-4xl">
           {game.inning}
         </div>
-
         <div className="scoreboard-label mt-1">
           Inning
         </div>

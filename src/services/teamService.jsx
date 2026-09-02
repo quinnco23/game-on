@@ -55,6 +55,22 @@ export async function getTeam(teamId) {
   return data
 }
 
+export async function updateTeam(
+  teamId,
+  updates
+) {
+  const { data, error } = await supabase
+    .from("teams")
+    .update(updates)
+    .eq("id", teamId)
+    .select()
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
 export async function findOrCreateTeam(name) {
   const cleanName = name.trim()
 
