@@ -63,6 +63,10 @@ import {
   GameClock,
 } from "./GameClock"
 import { GameFeed } from "./GameFeed";
+import GameVideo from "./GameVideo"
+
+import { Link } from "react-router-dom"
+
 
 // function FieldBase({ runner, label, className = "" }) {
 //   const occupied = Boolean(runner);
@@ -140,6 +144,8 @@ export default function TapScorePrototype() {
   const [showVoiceConfirm, setShowVoiceConfirm] = useState(false);
   const [showAudioPrompt, setShowAudioPrompt] = useState(false);
   const [showOutResultDialog, setShowOutResultDialog] = useState(false);
+  const [regulationComplete, setRegulationComplete] =
+  useState(null)
   const [showPitcherChange, setShowPitcherChange] =
   useState(false)
   const [selectedTeam, setSelectedTeam] =
@@ -152,35 +158,11 @@ export default function TapScorePrototype() {
 const pendingGameRef =
   useRef(null)
 
-  const [
-    regulationComplete,
-    setRegulationComplete,
-  ] = useState(null)
-
-  // useEffect(() => {
-  //   const result = resolveRunnerMovement({
-  //     bases: {
-  //       first: null,
-  //       second: null,
-  //       third: null,
-  //     },
-
-  //     batter: {
-  //       id: "1",
-  //       name: "Jake",
-  //     },
-
-  //     batterDestination: "1B",
-  //     runnerDecisions: {},
-  //   })
-
-  //   console.log("Runner engine result:", result)
   
-  // }, [])
+  const currentBatter =
+  getCurrentBatter(game)
 
-  
-
- const defensiveSide =
+const defensiveSide =
   game.half === "top"
     ? "home"
     : "away"
@@ -190,10 +172,10 @@ const defensiveTeamName =
     ? game.homeTeam
     : game.awayTeam
 
-    const defensivePlayers =
+const defensivePlayers =
   game.gameRoster?.[defensiveTeamName] ?? []
 
-  const derivedDefense =
+const derivedDefense =
   Object.fromEntries(
     defensivePlayers
       .map((player) => [
@@ -204,28 +186,28 @@ const defensiveTeamName =
       .filter(([position]) => position)
   )
 
-  
-
-  const defensiveAlignment =
+const defensiveAlignment =
   Object.keys(
     game.defense?.[defensiveSide] ?? {}
   ).length > 0
     ? game.defense[defensiveSide]
     : derivedDefense
 
-
-    const currentPitcherId =
-    defensiveAlignment?.P ?? null
+// MUST come before anything that uses currentPitcherId
+const currentPitcherId =
+  defensiveAlignment?.P ?? null
 
 const currentPitcher =
-  game.gameRoster?.[defensiveTeamName]
-    ?.find(
-      (player) =>
-        player.id === currentPitcherId
-    ) ?? null
-   
-    
-   
+  defensivePlayers.find(
+    (player) =>
+      player.id === currentPitcherId
+  ) ?? null
+
+const currentPitcherStats =
+  game.stats?.pitchers?.[currentPitcherId] ?? {}
+
+const pitchCount =
+  currentPitcherStats.pitches ?? 0
 
     
   
@@ -1556,6 +1538,55 @@ runsThisHalf:
       <div className="mx-auto max-w-md space-y-4">
         <Scoreboard game={game} />
 
+        <Link
+  to={`/games/${game.id}/watch`}
+  className="block"
+>
+  <div className="group relative cursor-pointer">
+  <GameVideo
+  videoSrc="/video/test-game.mp4"
+  game={game}
+  currentBatter={currentBatter}
+  currentPitcher={currentPitcher}
+  pitchCount={pitchCount}
+  liveCount={{
+    balls: game.balls ?? 0,
+    strikes: game.strikes ?? 0,
+  }}
+/>
+
+    <div
+      className="
+        pointer-events-none
+        absolute
+        inset-0
+        flex
+        items-center
+        justify-center
+        bg-black/0
+        transition
+        group-hover:bg-black/20
+      "
+    >
+      <div
+        className="
+          rounded
+          bg-black/70
+          px-4
+          py-2
+          text-sm
+          font-semibold
+          text-white
+          opacity-0
+          transition
+          group-hover:opacity-100
+        "
+      >
+        Watch Live
+      </div>
+    </div>
+  </div>
+</Link>
         <div className="scoreboard-panel p-4">
   <GameClock
     gameClock={game.gameClock}
@@ -2264,6 +2295,8 @@ return
             }}
           />
         )}
+
+
 
 <GameFeed
   events={game.events ?? []}

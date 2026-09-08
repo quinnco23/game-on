@@ -17,7 +17,7 @@ import { GameDetailScreen } from "./components/GameDetailScreen";
 import { StatsScreen } from "./components/fan/StatsScreen"
 import { PublicTeamsScreen } from "./components/fan/PublicTeamsScreen"
 import { ScheduleGameScreen } from "./components/ScheduleGameScreen";
-
+import WatchGamePage from "./components/WatchGamePage";
 function App() {
   return (
     <Routes>
@@ -81,6 +81,11 @@ function App() {
       path="/fan/games/:gameId"
       element={<GameDetailScreen />}
     />
+
+<Route
+  path="/games/:gameId/watch"
+  element={<WatchGamePage />}
+/>
   </Routes>
   );
 }
