@@ -377,6 +377,64 @@ export function OutResultDialog({
       </div>
     </div>
 
+    {bases.first && (
+  <div>
+    <div className="mb-2 font-bold">
+      {bases.first.name} on 1st
+    </div>
+
+    <div className="grid grid-cols-3 gap-2">
+      <Button
+        variant={
+          !runnerDecisions.first
+            ? "default"
+            : "secondary"
+        }
+        onClick={() =>
+          setRunnerDecision(
+            "first",
+            "hold"
+          )
+        }
+      >
+        Hold
+      </Button>
+
+      <Button
+        variant={
+          runnerDecisions.first === "second"
+            ? "default"
+            : "secondary"
+        }
+        onClick={() =>
+          setRunnerDecision(
+            "first",
+            "second"
+          )
+        }
+      >
+        2nd
+      </Button>
+
+      <Button
+        variant={
+          runnerDecisions.first === "third"
+            ? "default"
+            : "secondary"
+        }
+        onClick={() =>
+          setRunnerDecision(
+            "first",
+            "third"
+          )
+        }
+      >
+        3rd
+      </Button>
+    </div>
+  </div>
+)}
+
     {bases.third && (
       <div>
         <div className="mb-2 font-bold">

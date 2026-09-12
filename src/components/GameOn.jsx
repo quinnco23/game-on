@@ -186,11 +186,11 @@ const derivedDefense =
       .filter(([position]) => position)
   )
 
-const defensiveAlignment =
+  const defensiveAlignment =
   Object.keys(
-    game.defense?.[defensiveSide] ?? {}
+    game.defense?.[defensiveTeamName] ?? {}
   ).length > 0
-    ? game.defense[defensiveSide]
+    ? game.defense[defensiveTeamName]
     : derivedDefense
 
 // MUST come before anything that uses currentPitcherId
@@ -1532,7 +1532,32 @@ runsThisHalf:
     setRegulationComplete(null)
   }
 
+  console.log("DEFENSE FIELD INPUT:", {
+    defensiveSide,
+    defensiveTeamName,
   
+    rosterKeys:
+      Object.keys(game.gameRoster ?? {}),
+  
+    defenseKeys:
+      Object.keys(game.defense ?? {}),
+  
+    playerCount:
+      defensivePlayers.length,
+  
+    playerIds:
+      defensivePlayers.map(
+        (player) => player.id
+      ),
+  
+    alignment:
+      defensiveAlignment,
+  
+    alignmentIds:
+      Object.values(
+        defensiveAlignment ?? {}
+      ),
+  })
   return (
     <main className="min-h-screen bg-green-950 text-white p-4">
       <div className="mx-auto max-w-md space-y-4">
@@ -1623,6 +1648,8 @@ runsThisHalf:
 
 
 
+
+
 <DefensiveAlignmentField
   defense={defensiveAlignment}
   players={defensivePlayers}
@@ -1641,8 +1668,12 @@ runsThisHalf:
 
     setShowPitcherChange(true)
   }}
+
+  
   
 />
+
+
 {showPitcherChange && (
   <PitcherChangeDialog
     currentPitcher={currentPitcher}
@@ -2142,6 +2173,39 @@ label: `${resolution.playType} - ${batter.name}`,
 
                   const result = applyPlay(engineGameState, playEvent);
 
+                  console.log("RUN TRACE ENGINE:", {
+                    playType: playEvent.playType,
+                  
+                    inning: game.inning,
+                    half: game.half,
+                  
+                    scoreBefore: {
+                      home: game.score?.[game.homeTeam] ?? 0,
+                      away: game.score?.[game.awayTeam] ?? 0,
+                    },
+                  
+                    runsScored:
+                      result.metadata?.runsScored ?? 0,
+                  
+                    scoreAfterEngine:
+                      result.state?.score ?? null,
+                  
+                    runsThisHalfBefore:
+                      game.runsThisHalf ?? 0,
+                  
+                    runsThisHalfAfter:
+                      result.state?.runsThisHalf ?? null,
+                  
+                    basesBefore:
+                      game.bases,
+                  
+                    basesAfter:
+                      result.state?.bases,
+                  
+                    ok:
+                      result.ok,
+                  })
+
                   console.log(
                     "BASES AFTER PLAY ENGINE:",
                     result.gameState?.bases ??
@@ -2299,7 +2363,9 @@ return
 
 
 <GameFeed
-  events={game.events ?? []}
+  events={[...(game.events ?? [])]
+    .slice(-8)
+    .reverse()}
   title="Game Feed"
   compact
 />

@@ -230,11 +230,12 @@ export async function resolveLineupPlayers(
           number: player.number,
         })
 
-      return {
-        ...player,
-        id: savedPlayer.id,
-        isManual: false,
-      }
+        return {
+          ...savedPlayer,
+          ...player,
+          id: savedPlayer.id,
+          isManual: false,
+        }
     })
   )
 }

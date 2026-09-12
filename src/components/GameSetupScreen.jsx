@@ -80,6 +80,8 @@ export default function GameSetupScreen({ game, onStart }) {
   const [awayLineup, setAwayLineup] =
     useState([])
 
+    
+
     const [gameRules, setGameRules] = useState({
       // Regulation
       innings: 6,
@@ -87,6 +89,8 @@ export default function GameSetupScreen({ game, onStart }) {
       // Time limit
       timeLimitMinutes: 100,
       timeLimitRule: "no_new_inning",
+
+      minimumPlayers: 9,
     
       // Extra innings
       allowExtraInnings: false,
@@ -223,11 +227,31 @@ const homeTeam =
     teams.find(
       (team) => team.id === awayTeamId
     )
-    const canStartGame =
-    homeTeam &&
-    awayTeam &&
-    homeLineup.length > 0 &&
-    awayLineup.length > 0
+
+
+    const minimumPlayers =
+  gameRules?.minimumPlayers ?? 9
+
+const validHomePlayers =
+  (homeLineup ?? []).filter(
+    (player) => player?.name?.trim()
+  )
+
+const validAwayPlayers =
+  (awayLineup ?? []).filter(
+    (player) => player?.name?.trim()
+  )
+
+const homeLineupValid =
+  validHomePlayers.length >= minimumPlayers
+
+const awayLineupValid =
+  validAwayPlayers.length >= minimumPlayers
+  const canStartGame =
+  homeTeam &&
+  awayTeam &&
+  homeLineupValid &&
+  awayLineupValid
 
   return (
     
@@ -344,6 +368,20 @@ const homeTeam =
   value={gameRules}
   onChange={setGameRules}
 />
+
+{!canStartGame && homeTeam && awayTeam && (
+  <div className="border border-scoreboard-red/50 p-3 text-sm">
+    <div className="font-bold text-scoreboard-red">
+      Lineups incomplete
+    </div>
+
+    <div className="mt-1 text-scoreboard-muted">
+      Away: {validAwayPlayers.length}/{minimumPlayers}
+      {" • "}
+      Home: {validHomePlayers.length}/{minimumPlayers}
+    </div>
+  </div>
+)}
       <Button
   disabled={!canStartGame}
   className="scoreboard-button scoreboard-button-primary w-full rounded-none py-6 text-lg"
@@ -358,12 +396,9 @@ const homeTeam =
         return
       }
 
-      if (
-        homeLineup.length === 0 ||
-        awayLineup.length === 0
-      ) {
+      if (!homeLineupValid || !awayLineupValid) {
         alert(
-          "Both teams need at least one player in the lineup."
+          `Both teams need at least ${minimumPlayers} players in the lineup.`
         )
         return
       }
@@ -394,6 +429,58 @@ const homeTeam =
           awayTeam.id
         ),
       ])
+
+      const resolvedHomeRoster = [
+        ...homeRoster,
+        ...resolvedHomeLineup.filter(
+          (lineupPlayer) =>
+            !homeRoster.some(
+              (rosterPlayer) =>
+                rosterPlayer.id === lineupPlayer.id
+            )
+        ),
+      ]
+      
+      const resolvedAwayRoster = [
+        ...awayRoster,
+        ...resolvedAwayLineup.filter(
+          (lineupPlayer) =>
+            !awayRoster.some(
+              (rosterPlayer) =>
+                rosterPlayer.id === lineupPlayer.id
+            )
+        ),
+      ]
+
+      const normalizedHomeRoster =
+  resolvedHomeRoster.map((player) => ({
+    ...player,
+
+    position:
+      player.position ??
+      player.default_position ??
+      "",
+
+    default_position:
+      player.default_position ??
+      player.position ??
+      "",
+  }))
+
+const normalizedAwayRoster =
+  resolvedAwayRoster.map((player) => ({
+    ...player,
+
+    position:
+      player.position ??
+      player.default_position ??
+      "",
+
+    default_position:
+      player.default_position ??
+      player.position ??
+      "",
+  }))
 
       console.log(
         "RESOLVED HOME LINEUP:",
@@ -449,6 +536,32 @@ const homeTeam =
         }),
       ])
 
+      const normalizedHomeLineup =
+      savedHomeLineup.map((player) => ({
+        ...player,
+        position:
+          player.position ??
+          player.default_position ??
+          "",
+        default_position:
+          player.default_position ??
+          player.position ??
+          "",
+      }))
+    
+    const normalizedAwayLineup =
+      savedAwayLineup.map((player) => ({
+        ...player,
+        position:
+          player.position ??
+          player.default_position ??
+          "",
+        default_position:
+          player.default_position ??
+          player.position ??
+          "",
+      }))
+
       console.timeEnd(
         "SAVE BOTH LINEUPS"
       )
@@ -475,14 +588,11 @@ const homeTeam =
         awayTeam:
           awayTeam.name,
 
-        homeLineup:
-          savedHomeLineup,
+          homeLineup: normalizedHomeLineup,
+          awayLineup: normalizedAwayLineup,
 
-        awayLineup:
-          savedAwayLineup,
-
-        homeRoster,
-        awayRoster,
+          homeRoster: normalizedHomeRoster,
+awayRoster: normalizedAwayRoster,
 
         gameRules,
       })

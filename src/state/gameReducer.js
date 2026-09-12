@@ -19,6 +19,39 @@ export function gameReducer(state, action) {
     case "START_GAME": {
       const homeTeam = action.homeTeam || state.homeTeam
       const awayTeam = action.awayTeam || state.awayTeam
+
+      const buildDefense = (lineup = []) => {
+        const defense = {}
+      
+        lineup.forEach((player) => {
+          const position =
+            player.position ??
+            player.default_position ??
+            ""
+      
+          if (!position || !player.id) {
+            return
+          }
+      
+          defense[position.toUpperCase()] =
+            player.id
+        })
+      
+        return defense
+      }
+      
+      const homeDefense =
+        buildDefense(action.homeLineup)
+      
+      const awayDefense =
+        buildDefense(action.awayLineup)
+      
+      console.log("START GAME DEFENSE:", {
+        homeTeam,
+        homeDefense,
+        awayTeam,
+        awayDefense,
+      })
     
       return {
         ...state,
@@ -42,6 +75,11 @@ export function gameReducer(state, action) {
         gameRoster: {
           [homeTeam]: action.homeRoster ?? [],
           [awayTeam]: action.awayRoster ?? [],
+        },
+
+        defense: {
+          [homeTeam]: homeDefense,
+          [awayTeam]: awayDefense,
         },
     
         battingIndex: {
@@ -139,6 +177,29 @@ export function gameReducer(state, action) {
         if (!result?.ok) {
           return state;
         }
+
+        console.log("RUN TRACE REDUCER BEFORE:", {
+          inning: state.inning,
+          half: state.half,
+        
+          homeTeam: state.homeTeam,
+          awayTeam: state.awayTeam,
+        
+          scoreBefore:
+            state.score,
+        
+          engineScore:
+            result.state?.score,
+        
+          runsScored:
+            result.metadata?.runsScored ?? 0,
+        
+          runsThisHalfBefore:
+            state.runsThisHalf ?? 0,
+        
+          runsThisHalfEngine:
+            result.state?.runsThisHalf ?? 0,
+        })
       
         const endsPlateAppearance =
           result.metadata?.playDefinition
@@ -234,6 +295,29 @@ const nextBases =
         third: null,
       }
     : result.state.bases
+
+    const mappedScore = {
+      ...state.score,
+    
+      [state.homeTeam]:
+        result.state.score.home,
+    
+      [state.awayTeam]:
+        result.state.score.away,
+    }
+
+    console.log("RUN TRACE REDUCER AFTER:", {
+      mappedScore,
+    
+      nextInning:
+        result.state.inning,
+    
+      nextHalf:
+        result.state.half,
+    
+      nextRunsThisHalf:
+        result.state.runsThisHalf ?? 0,
+    })
       
         return {
           ...state,
@@ -245,15 +329,17 @@ const nextBases =
       
           bases: nextBases,
       
-          score: {
-            ...state.score,
+          // score: {
+          //   ...state.score,
       
-            [state.homeTeam]:
-              result.state.score.home,
+          //   [state.homeTeam]:
+          //     result.state.score.home,
       
-            [state.awayTeam]:
-              result.state.score.away,
-          },
+          //   [state.awayTeam]:
+          //     result.state.score.away,
+          // },
+
+          score: mappedScore,
       
           outs: result.state.outs,
 half: result.state.half,

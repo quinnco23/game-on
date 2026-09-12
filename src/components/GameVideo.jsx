@@ -37,15 +37,16 @@ export default function GameVideo({
   
         {/* COMPACT BROADCAST OVERLAY */}
         <div
-          className="
-            pointer-events-none
-            absolute
-            left-3
-            top-3
-            w-[300px]
-            max-w-[82%]
-          "
-        >
+  className="
+    pointer-events-none
+    absolute
+    left-2
+    top-2
+    w-[300px]
+    origin-top-left
+    scale-[0.42]
+  "
+>
           <div
             className="
               overflow-hidden
