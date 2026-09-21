@@ -33,6 +33,7 @@ import { getForcedAdvanceDecisions } from "../scoring/getForcedAdvanceDecisions"
 export function CountControls({
   game,
   dispatch,
+  onPitchBall,
   onBall,
   onCalledStrike,
   onSwingingStrike,
@@ -49,11 +50,18 @@ export function CountControls({
     const isBallFour =
       game.balls === 3
   
-    // Balls 1–3
+    // Balls 1–3:
+    // record pitch + increment ball count.
     if (!isBallFour) {
       onBall()
       return
     }
+  
+    // Ball 4:
+    // record the pitch only.
+    // Do NOT dispatch BALL here because
+    // the walk engine below handles the walk.
+    onPitchBall()
   
     try {
       const batter =
@@ -110,32 +118,32 @@ export function CountControls({
           engineGameState,
           playEvent
         )
-
-        console.log("GROUNDOUT RUN DEBUG:", {
-          runnerDecisions,
-          runsScored:
-            result.metadata?.runsScored,
-          rbiCount:
-            result.metadata?.rbiCount,
+  
+      console.log("WALK RUN DEBUG:", {
+        runnerDecisions,
+        runsScored:
+          result.metadata?.runsScored,
+        rbiCount:
+          result.metadata?.rbiCount,
+        batterStats:
+          result.metadata?.batterStats,
+        runnerAdvances:
+          result.metadata?.runnerAdvances,
+      })
+  
+      console.log(
+        "WALK RESULT STATS:",
+        {
           batterStats:
             result.metadata?.batterStats,
-          runnerAdvances:
-            result.metadata?.runnerAdvances,
-        })
-
-        console.log(
-          "WALK RESULT STATS:",
-          {
-            batterStats:
-              result.metadata?.batterStats,
-        
-            pitcherStats:
-              result.metadata?.pitcherStats,
-        
-            fullMetadata:
-              result.metadata,
-          }
-        )
+  
+          pitcherStats:
+            result.metadata?.pitcherStats,
+  
+          fullMetadata:
+            result.metadata,
+        }
+      )
   
       if (!result.ok) {
         throw new Error(
@@ -164,24 +172,27 @@ export function CountControls({
         Object.fromEntries(
           defensivePlayers
             .map((player) => [
-              player.default_position ??
-                player.position,
+              player.position?.trim() ||
+                player.default_position?.trim() ||
+                "",
               player.id,
             ])
             .filter(
-              ([position]) =>
-                position
+              ([position, playerId]) =>
+                position &&
+                position !== "BENCH" &&
+                playerId
             )
         )
   
-      const defensiveAlignment =
+        const defensiveAlignment =
         Object.keys(
           game.defense?.[
-            defensiveSide
+            defensiveTeamName
           ] ?? {}
         ).length > 0
           ? game.defense[
-              defensiveSide
+              defensiveTeamName
             ]
           : derivedDefense
   

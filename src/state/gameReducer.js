@@ -25,11 +25,15 @@ export function gameReducer(state, action) {
       
         lineup.forEach((player) => {
           const position =
-            player.position ??
-            player.default_position ??
+            player.position?.trim() ||
+            player.default_position?.trim() ||
             ""
       
-          if (!position || !player.id) {
+          if (
+            !position ||
+            !player.id ||
+            position.toUpperCase() === "BENCH"
+          ) {
             return
           }
       
@@ -41,17 +45,51 @@ export function gameReducer(state, action) {
       }
       
       const homeDefense =
+      console.log("START_GAME LINEUPS RECEIVED:", {
+        home: action.homeLineup,
+        away: action.awayLineup,
+      })
         buildDefense(action.homeLineup)
       
       const awayDefense =
+      console.log("START_GAME LINEUPS RECEIVED:", {
+        home: action.homeLineup,
+        away: action.awayLineup,
+      })
         buildDefense(action.awayLineup)
       
-      console.log("START GAME DEFENSE:", {
-        homeTeam,
-        homeDefense,
-        awayTeam,
-        awayDefense,
-      })
+        console.log(
+          "START GAME DEFENSE DETAIL:",
+          JSON.stringify(
+            {
+              homeTeam,
+              homeLineup: (action.homeLineup ?? []).map(
+                (player) => ({
+                  name: player.name,
+                  id: player.id,
+                  position: player.position,
+                  default_position:
+                    player.default_position,
+                })
+              ),
+              homeDefense,
+        
+              awayTeam,
+              awayLineup: (action.awayLineup ?? []).map(
+                (player) => ({
+                  name: player.name,
+                  id: player.id,
+                  position: player.position,
+                  default_position:
+                    player.default_position,
+                })
+              ),
+              awayDefense,
+            },
+            null,
+            2
+          )
+        )
     
       return {
         ...state,

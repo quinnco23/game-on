@@ -404,12 +404,78 @@ const awayLineupValid =
       }
 
       console.log("START LINEUPS:", {
-        home: homeLineup.map(
-          (player) => player.name
-        ),
-        away: awayLineup.map(
-          (player) => player.name
-        ),
+        home: homeLineup.map((player) => ({
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          default_position:
+            player.default_position,
+        })),
+      
+        away: awayLineup.map((player) => ({
+          id: player.id,
+          name: player.name,
+          position: player.position,
+          default_position:
+            player.default_position,
+        })),
+      })
+
+      const requiredPositions = [
+  "P",
+  "C",
+  "1B",
+  "2B",
+  "3B",
+  "SS",
+  "LF",
+  "CF",
+  "RF",
+]
+
+function getAssignedPositions(lineup) {
+  return new Set(
+    lineup
+      .map(
+        (player) =>
+          player.position?.trim()?.toUpperCase() ||
+          player.default_position?.trim()?.toUpperCase() ||
+          ""
+      )
+      .filter(Boolean)
+  )
+}
+
+const homePositions =
+  getAssignedPositions(homeLineup)
+
+const awayPositions =
+  getAssignedPositions(awayLineup)
+
+console.log("DEFENSIVE POSITION CHECK:", {
+  home: [...homePositions],
+  away: [...awayPositions],
+})
+
+if (homePositions.size === 0) {
+  alert(
+    `${homeTeam.name} has no defensive positions assigned. Assign positions before starting the game.`
+  )
+  return
+}
+
+if (awayPositions.size === 0) {
+  alert(
+    `${awayTeam.name} has no defensive positions assigned. Assign positions before starting the game.`
+  )
+  return
+}
+      
+    
+      
+      console.log("DEFENSIVE POSITION CHECK:", {
+        home: [...homePositions],
+        away: [...awayPositions],
       })
 
       //
@@ -457,14 +523,14 @@ const awayLineupValid =
     ...player,
 
     position:
-      player.position ??
-      player.default_position ??
-      "",
+  player.position?.trim() ||
+  player.default_position?.trim() ||
+  "",
 
-    default_position:
-      player.default_position ??
-      player.position ??
-      "",
+default_position:
+  player.default_position?.trim() ||
+  player.position?.trim() ||
+  "",
   }))
 
 const normalizedAwayRoster =
@@ -472,14 +538,14 @@ const normalizedAwayRoster =
     ...player,
 
     position:
-      player.position ??
-      player.default_position ??
-      "",
+  player.position?.trim() ||
+  player.default_position?.trim() ||
+  "",
 
-    default_position:
-      player.default_position ??
-      player.position ??
-      "",
+default_position:
+  player.default_position?.trim() ||
+  player.position?.trim() ||
+  "",
   }))
 
       console.log(
@@ -537,30 +603,42 @@ const normalizedAwayRoster =
       ])
 
       const normalizedHomeLineup =
-      savedHomeLineup.map((player) => ({
-        ...player,
-        position:
-          player.position ??
-          player.default_position ??
-          "",
-        default_position:
-          player.default_position ??
-          player.position ??
-          "",
-      }))
-    
-    const normalizedAwayLineup =
-      savedAwayLineup.map((player) => ({
-        ...player,
-        position:
-          player.position ??
-          player.default_position ??
-          "",
-        default_position:
-          player.default_position ??
-          player.position ??
-          "",
-      }))
+  resolvedHomeLineup.map(
+    (player, index) => ({
+      ...player,
+
+      position:
+        player.position?.trim() ||
+        player.default_position?.trim() ||
+        "",
+
+      default_position:
+        player.default_position?.trim() ||
+        player.position?.trim() ||
+        "",
+
+      battingOrder: index + 1,
+    })
+  )
+
+const normalizedAwayLineup =
+  resolvedAwayLineup.map(
+    (player, index) => ({
+      ...player,
+
+      position:
+        player.position?.trim() ||
+        player.default_position?.trim() ||
+        "",
+
+      default_position:
+        player.default_position?.trim() ||
+        player.position?.trim() ||
+        "",
+
+      battingOrder: index + 1,
+    })
+  )
 
       console.timeEnd(
         "SAVE BOTH LINEUPS"
@@ -579,6 +657,15 @@ const normalizedAwayRoster =
       //
       // 4. ENTER THE GAME
       //
+
+      console.log(
+        "FINAL LINEUPS SENT TO GAME:",
+        {
+          home: normalizedHomeLineup,
+          away: normalizedAwayLineup,
+        }
+      )
+
       onStart({
         gameId: savedGame.id,
 
@@ -591,8 +678,8 @@ const normalizedAwayRoster =
           homeLineup: normalizedHomeLineup,
           awayLineup: normalizedAwayLineup,
 
-          homeRoster: normalizedHomeRoster,
-awayRoster: normalizedAwayRoster,
+          homeRoster: normalizedHomeLineup,
+awayRoster: normalizedAwayLineup,
 
         gameRules,
       })

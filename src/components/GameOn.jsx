@@ -175,15 +175,29 @@ const defensiveTeamName =
 const defensivePlayers =
   game.gameRoster?.[defensiveTeamName] ?? []
 
+  const defensiveLineup =
+  game.lineups?.[defensiveTeamName] ?? []
+
 const derivedDefense =
   Object.fromEntries(
-    defensivePlayers
-      .map((player) => [
-        player.default_position ??
-          player.position,
-        player.id,
-      ])
-      .filter(([position]) => position)
+    defensiveLineup
+      .map((player) => {
+        const position =
+          player.position?.trim() ||
+          player.default_position?.trim() ||
+          ""
+
+        return [
+          position.toUpperCase(),
+          player.id,
+        ]
+      })
+      .filter(
+        ([position, playerId]) =>
+          position &&
+          position !== "BENCH" &&
+          playerId
+      )
   )
 
   const defensiveAlignment =
@@ -192,6 +206,35 @@ const derivedDefense =
   ).length > 0
     ? game.defense[defensiveTeamName]
     : derivedDefense
+
+    console.log(
+      "LIVE DEFENSE STATE:",
+      JSON.stringify(
+        {
+          defensiveTeamName,
+          storedDefense:
+            game.defense?.[
+              defensiveTeamName
+            ],
+    
+          defensiveAlignment,
+    
+          defensivePlayers:
+            defensivePlayers.map(
+              (player) => ({
+                id: player.id,
+                name: player.name,
+                position:
+                  player.position,
+                default_position:
+                  player.default_position,
+              })
+            ),
+        },
+        null,
+        2
+      )
+    )
 
 // MUST come before anything that uses currentPitcherId
 const currentPitcherId =
@@ -1658,7 +1701,7 @@ runsThisHalf:
   onAssign={(position, playerId) => {
     dispatch({
       type: "SET_DEFENSIVE_POSITION",
-      team: defensiveSide,
+      team: defensiveTeamName,
       position,
       playerId,
     })
@@ -1686,7 +1729,7 @@ runsThisHalf:
     onSelect={(playerId) => {
       dispatch({
         type: "CHANGE_PITCHER",
-        team: defensiveSide,
+        team: defensiveTeamName,
         playerId,
         currentDefense:
           defensiveAlignment,
@@ -1714,6 +1757,10 @@ runsThisHalf:
 <CountControls
   game={game}
   dispatch={dispatch}
+
+  onPitchBall={() => {
+    handlePitch(PITCH_RESULTS.BALL)
+  }}
 
   onBall={() => {
     handlePitch(PITCH_RESULTS.BALL)

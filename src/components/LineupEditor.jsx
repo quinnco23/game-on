@@ -90,7 +90,7 @@ function SortablePlayerRow({
       rounded-none
       border
       border-scoreboard-cream/20
-      bg-scoreboard-light/20
+      bg-scoreboard-light
       px-3
       py-2.5
       font-heading
@@ -111,32 +111,76 @@ function SortablePlayerRow({
   />
 
   {/* POSITION */}
-  <input
-    className="
-      w-full
-      rounded-none
-      border
-      border-scoreboard-cream/20
-      bg-scoreboard-light/20
-      px-2
-      py-2.5
-      text-center
-      text-base
-      font-bold
-      uppercase
-      text-scoreboard-cream
-      outline-none
-      focus:border-scoreboard-amber
-    "
-    value={player.position}
-    onChange={(e) =>
-      updatePlayer(
-        index,
-        "position",
-        e.target.value
-      )
-    }
-  />
+  <select
+  className="
+    w-full
+    rounded-none
+    border
+    border-scoreboard-cream/20
+    bg-scoreboard-light
+    px-2
+    py-2.5
+    text-center
+    text-base
+    font-bold
+    uppercase
+    text-scoreboard-cream
+    outline-none
+    focus:border-scoreboard-amber
+  "
+  value={player.position ?? ""}
+  onChange={(e) =>
+    updatePlayer(
+      index,
+      "position",
+      e.target.value
+    )
+  }
+>
+  <option value="">
+    --
+  </option>
+
+  <option value="P">
+    P
+  </option>
+
+  <option value="C">
+    C
+  </option>
+
+  <option value="1B">
+    1B
+  </option>
+
+  <option value="2B">
+    2B
+  </option>
+
+  <option value="3B">
+    3B
+  </option>
+
+  <option value="SS">
+    SS
+  </option>
+
+  <option value="LF">
+    LF
+  </option>
+
+  <option value="CF">
+    CF
+  </option>
+
+  <option value="RF">
+    RF
+  </option>
+
+  <option value="BENCH">
+    Bench
+  </option>
+</select>
 
   {/* REMOVE */}
   <button

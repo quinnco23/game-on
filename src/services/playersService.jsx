@@ -25,9 +25,9 @@ export async function saveLineup({
       player_id: player.id,
       batting_order: index + 1,
       position:
-        player.position ??
-        player.default_position ??
-        null,
+  player.position?.trim() ||
+  player.default_position?.trim() ||
+  null,
       is_starter: true,
     })
   )
@@ -44,9 +44,9 @@ export async function saveLineup({
       number: player.number,
       name: player.name,
       position:
-        player.position ??
-        player.default_position ??
-        "",
+  player.position?.trim() ||
+  player.default_position?.trim() ||
+  "",
       battingOrder: index + 1,
     })
   )
