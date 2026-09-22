@@ -1,17 +1,17 @@
 import { useState } from "react"
 
 const spots = {
-  P:  { left: "50%", top: "65%" },
-  C:  { left: "50%", top: "90%" },
+  P:  { left: "50%", top: "63%" },
+  C:  { left: "50%", top: "78%" },
 
-  "1B": { left: "68%", top: "56%" },
-  "2B": { left: "62%", top: "48%" },
-  "3B": { left: "33%", top: "55%" },
-  SS:   { left: "38%", top: "48%" },
+  "1B": { left: "65%", top: "56%" },
+  "2B": { left: "62%", top: "49%" },
+  "3B": { left: "36%", top: "56%" },
+  SS:   { left: "40%", top: "49%" },
 
-  LF: { left: "15%", top: "40%" },
-  CF: { left: "50%", top: "21%" },
-  RF: { left: "85%", top: "40%" },
+  LF: { left: "25%", top: "45%" },
+  CF: { left: "50%", top: "35%" },
+  RF: { left: "75%", top: "44%" },
 }
 
 export function DefensiveAlignmentField({
@@ -46,7 +46,7 @@ export function DefensiveAlignmentField({
 
   return (
     <>
-      <div className="absolute inset-20 pointer-events-none z-10 h-75 ">
+      <div className="absolute inset-0 pointer-events-none z-10">
         {Object.entries(spots).map(
           ([position, coordinates]) => {
             const player =
@@ -74,22 +74,29 @@ export function DefensiveAlignmentField({
               >
                 <div
   className="
-    px-2 py-1
-    text-center text-white
+    min-w-[58px]
+    max-w-[86px]
+    rounded-lg
+   
+   
+    px-2 py-1.5
+    text-center
+    text-white
     shadow-lg
+    
   "
 >
-  <div className="max-w-10 truncate text-[8px]">
+  <div className="truncate text-[10px] font-semibold leading-tight sm:text-xs">
     {player?.name ?? "Assign"}
   </div>
 
-  <div className="text-[7px] font-bold opacity-70">
+  {/* <div className="mt-0.5 text-[8px] font-bold uppercase tracking-wide text-white/70">
     {position}
-  </div>
+  </div> */}
 
   {position === "P" && (
-    <div className=" text-[7px] font-semibold">
-      Pitches: {pitchCount}
+    <div className="mt-0.5 text-[8px] font-semibold text-white/80">
+      {pitchCount} pitches
     </div>
   )}
 </div>
@@ -130,73 +137,104 @@ export function DefensiveAlignmentField({
       </div>
 
       {selectedPosition && (
-        <div className="
-          fixed inset-0 z-50
-          flex items-end
-          bg-black/60
-          sm:items-center
-          sm:justify-center
-        ">
-          <div className="
-            w-full rounded-t-3xl
-            bg-green-900 p-4
-            sm:max-w-sm
-            sm:rounded-3xl
-          ">
-
-
-            <div className="mb-3 text-lg font-bold">
-              Assign {selectedPosition}
-            </div>
-            
-
-
-
-            <div className="space-y-2">
-              {players.map((player) => (
-                <button
-                  key={player.id}
-                  type="button"
-                  className="
-                    w-full rounded-xl
-                    bg-slate-100 p-3 text-black
-                    text-left font-medium
-                  "
-                  onClick={() => {
-                    onAssign(
-                      selectedPosition,
-                      player.id
-                    )
-
-                    setSelectedPosition(null)
-                  }}
-                >
-                  {player.name}
-                </button>
-                
-
-                
-              ))}  
-
-
-              
-            </div>
-
-            <button
-              className="
-                mt-4 w-full
-                rounded-xl
-                bg-slate-200 p-3 text-red-500
-              "
-              onClick={() =>
-                setSelectedPosition(null)
-              }
-            >
-              Cancel
-            </button>
-          </div>
+  <div
+    className="
+      fixed inset-0 z-50
+      flex items-end
+      bg-black/60
+      sm:items-center
+      sm:justify-center
+      sm:p-4
+    "
+  >
+    <div
+      className="
+        flex
+        max-h-[calc(100dvh-12px)]
+        w-full
+        flex-col
+        overflow-hidden
+        rounded-t-3xl
+        bg-green-900
+        sm:max-h-[calc(100dvh-32px)]
+        sm:max-w-sm
+        sm:rounded-3xl
+      "
+    >
+      <div className="shrink-0 p-4 pb-3">
+        <div className="text-lg font-bold text-white">
+          Assign {selectedPosition}
         </div>
-      )}
+      </div>
+
+      <div
+        className="
+          min-h-0
+          flex-1
+          overflow-y-auto
+          overscroll-contain
+          px-4
+          pb-4
+        "
+      >
+        <div className="space-y-2">
+          {players.map((player) => (
+            <button
+              key={player.id}
+              type="button"
+              className="
+                w-full
+                rounded-xl
+                bg-scoreboard-cream
+                p-3
+                text-left
+                font-medium
+                text-black
+              "
+              onClick={() => {
+                onAssign(
+                  selectedPosition,
+                  player.id
+                )
+
+                setSelectedPosition(null)
+              }}
+            >
+              {player.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="
+          shrink-0
+          border-t
+          border-white/20
+          bg-green-900
+          p-4
+          pb-[calc(1rem+env(safe-area-inset-bottom))]
+        "
+      >
+        <button
+          className="
+            w-full
+            rounded-xl
+            bg-slate-200
+            p-3
+            font-medium
+            text-red-500
+          "
+          onClick={() =>
+            setSelectedPosition(null)
+          }
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </>
   )
 }

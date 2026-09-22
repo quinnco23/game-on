@@ -310,9 +310,32 @@ export function OutResultDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 p-4 flex items-center justify-center border-b-2 ">
-      <Card className="w-full max-w-md  bg-green-900 text-slate-950 border-2 border-scoreboard-red ">
-        <CardContent className="p-5 space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3">
+      <Card
+  className="
+    flex
+    max-h-[calc(100dvh-24px)]
+    w-full
+    max-w-md
+    flex-col
+    overflow-hidden
+    border-2
+    border-scoreboard-red
+    bg-green-900
+    text-slate-950
+  "
+>
+<CardContent
+  className="
+    min-h-0
+    flex-1
+    overflow-y-auto
+    overscroll-contain
+    p-5
+    pb-[calc(1.25rem+env(safe-area-inset-bottom))]
+    space-y-5
+  "
+>
           <div>
             <h2 className="text-xl font-bold scoreboard-label  ">
               Record Result
@@ -977,25 +1000,41 @@ export function OutResultDialog({
             <div className="text-2xl font-black">{notation}</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              variant="secondary"
-              className="rounded-2xl"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
+          <div
+  className="
+    sticky
+    bottom-0
+    z-10
+    -mx-5
+    grid
+    grid-cols-2
+    gap-3
+    border-t
+    border-white/20
+    bg-green-900
+    px-5
+    pt-4
+    pb-[calc(0.5rem+env(safe-area-inset-bottom))]
+  "
+>
+  <Button
+    variant="secondary"
+    className="rounded-2xl"
+    onClick={onCancel}
+  >
+    Cancel
+  </Button>
 
-            <Button
-              className="rounded-2xl"
-              onClick={() => {
-                console.log("CONFIRM BUTTON CLICKED");
-                submit();
-              }}
-            >
-              Confirm
-            </Button>
-          </div>
+  <Button
+    className="rounded-2xl"
+    onClick={() => {
+      console.log("CONFIRM BUTTON CLICKED");
+      submit();
+    }}
+  >
+    Confirm
+  </Button>
+</div>
         </CardContent>
       </Card>
     </div>

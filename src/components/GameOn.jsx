@@ -598,6 +598,11 @@ const pitchCount =
   }
 
   async function handleStolenBase(from, to) {
+    console.log("HANDLE STOLEN BASE FIRED", {
+      from,
+      to,
+    });
+  
     try {
       const runner = game.bases?.[from];
 
@@ -607,19 +612,27 @@ const pitchCount =
 
       const engineGameState = {
         ...game,
-
+      
         score: {
-          home: game.score?.[game.homeTeam] ?? 0,
-
-          away: game.score?.[game.awayTeam] ?? 0,
+          home:
+            game.score?.home ??
+            game.score?.[game.homeTeam] ??
+            0,
+      
+          away:
+            game.score?.away ??
+            game.score?.[game.awayTeam] ??
+            0,
         },
-
-        version: game.version ?? 0,
-
-        gameRules: game.gameRules,
-
-runsThisHalf:
-  game.runsThisHalf ?? 0,
+      
+        version:
+          game.version ?? 0,
+      
+        gameRules:
+          game.gameRules,
+      
+        runsThisHalf:
+          game.runsThisHalf ?? 0,
       };
 
       const playEvent = {
@@ -641,24 +654,49 @@ runsThisHalf:
         },
       };
 
+      console.log("STEAL ENGINE INPUT:", {
+        homeTeam: game.homeTeam,
+        awayTeam: game.awayTeam,
+      
+        uiScore: game.score,
+      
+        engineScore: engineGameState.score,
+      
+        inning: engineGameState.inning,
+        half: engineGameState.half,
+      
+        from,
+        to,
+      });
+
+      console.log("🚨 BEFORE STEAL APPLYPLAY", {
+        rawGameScore: game.score,
+        homeTeam: game.homeTeam,
+        awayTeam: game.awayTeam,
+        engineScore: engineGameState.score,
+        bases: engineGameState.bases,
+      })
+
       const result = applyPlay(engineGameState, playEvent);
+
+      
 
       if (!result.ok) {
         throw new Error(
           result.errors?.[0]?.message ?? "Could not record the stolen base."
         );
       }
-      result.state = {
-        ...result.state,
+      // result.state = {
+      //   ...result.state,
       
-        score: {
-          [game.homeTeam]:
-            result.state.score?.home ?? 0,
+      //   score: {
+      //     [game.homeTeam]:
+      //       result.state.score?.home ?? 0,
       
-          [game.awayTeam]:
-            result.state.score?.away ?? 0,
-        },
-      }
+      //     [game.awayTeam]:
+      //       result.state.score?.away ?? 0,
+      //   },
+      // }
 
       await handleGameAction({
         game,
@@ -714,12 +752,16 @@ runsThisHalf:
         ...game,
 
         score: {
-          home: game.score?.[game.homeTeam] ?? 0,
-
-          away: game.score?.[game.awayTeam] ?? 0,
+          home:
+            game.score?.home ??
+            game.score?.[game.homeTeam] ??
+            0,
+        
+          away:
+            game.score?.away ??
+            game.score?.[game.awayTeam] ??
+            0,
         },
-
-        version: game.version ?? 0,
       };
 
       const playEvent = {
@@ -751,17 +793,17 @@ runsThisHalf:
         );
       }
 
-      result.state = {
-        ...result.state,
+      // result.state = {
+      //   ...result.state,
       
-        score: {
-          [game.homeTeam]:
-            result.state.score?.home ?? 0,
+      //   score: {
+      //     [game.homeTeam]:
+      //       result.state.score?.home ?? 0,
       
-          [game.awayTeam]:
-            result.state.score?.away ?? 0,
-        },
-      }
+      //     [game.awayTeam]:
+      //       result.state.score?.away ?? 0,
+      //   },
+      // }
 
       const label =
         to === "home"

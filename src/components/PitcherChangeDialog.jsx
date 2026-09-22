@@ -89,7 +89,7 @@ export function PitcherChangeDialog({
                     items-center
                     justify-between
                     rounded-xl
-                    bg-white
+                  bg-scoreboard-cream
                     p-3
                     text-left
                     text-slate-900

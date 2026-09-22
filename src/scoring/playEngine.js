@@ -13,23 +13,16 @@ export function applyPlay(
 ) {
   console.log(
     "🔥 APPLY PLAY ENGINE FIRED",
-    {
-      playType:
-        playResult?.playType,
-
-      inning:
-        gameState?.inning,
-
-      half:
-        gameState?.half,
-
-      runsThisHalf:
-        gameState?.runsThisHalf,
-
-      gameRules:
-        gameState?.gameRules,
-    }
-  )
+    JSON.stringify({
+      playType: playResult?.playType,
+      inning: gameState?.inning,
+      half: gameState?.half,
+      score: gameState?.score,
+      homeTeam: gameState?.homeTeam,
+      awayTeam: gameState?.awayTeam,
+      runsThisHalf: gameState?.runsThisHalf,
+    })
+  );
 
   // existing code...
   if (!gameState) {
@@ -186,21 +179,31 @@ const halfInningEndReason =
       : "top"
     : gameState.half;
 
-  const nextInning =
-    halfInningEnded && gameState.half === "bottom"
-      ? (gameState.inning ?? 1) + 1
-      : gameState.inning ?? 1;
+    const nextInning =
+  halfInningEnded && gameState.half === "bottom"
+    ? (gameState.inning ?? 1) + 1
+    : gameState.inning ?? 1;
 
-  const nextScore = {
-    home: gameState.score?.home ?? 0,
-    away: gameState.score?.away ?? 0,
-  };
+const nextScore = {
+  home: gameState.score?.home ?? 0,
+  away: gameState.score?.away ?? 0,
+};
 
-  if (gameState.half === "top") {
-    nextScore.away += runsScored;
-  } else {
-    nextScore.home += runsScored;
-  }
+if (gameState.half === "top") {
+  nextScore.away += runsScored;
+} else {
+  nextScore.home += runsScored;
+}
+
+console.log(
+  "🔥 ENGINE SCORE CALC",
+  JSON.stringify({
+    incomingScore: gameState.score,
+    runsScored,
+    half: gameState.half,
+    nextScore,
+  })
+);
 
   const isSacrificeFly =
   playResult.playType === "flyOut" &&

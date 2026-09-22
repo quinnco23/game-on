@@ -338,11 +338,15 @@ const nextBases =
       ...state.score,
     
       [state.homeTeam]:
-        result.state.score.home,
+        result.state?.score?.home ??
+        state.score?.[state.homeTeam] ??
+        0,
     
       [state.awayTeam]:
-        result.state.score.away,
-    }
+        result.state?.score?.away ??
+        state.score?.[state.awayTeam] ??
+        0,
+    };
 
     console.log("RUN TRACE REDUCER AFTER:", {
       mappedScore,
@@ -534,17 +538,30 @@ case "UNDO": {
             )?.[0] ?? null
       
         // Put incoming player on the mound.
-        currentDefense.P = playerId
-      
-        // If incoming pitcher was already on the field,
-        // move the old pitcher into that vacated position.
-        if (
-          incomingPlayerPosition &&
-          oldPitcherId
-        ) {
-          currentDefense[incomingPlayerPosition] =
-            oldPitcherId
-        }
+        // Put incoming player on the mound.
+currentDefense.P = playerId
+
+// If incoming pitcher was already playing another position,
+// clear that old position first.
+if (incomingPlayerPosition) {
+  if (oldPitcherId) {
+    // Swap old pitcher into the vacated position.
+    currentDefense[incomingPlayerPosition] =
+      oldPitcherId
+  } else {
+    // No old pitcher recorded, so just clear the old position.
+    delete currentDefense[incomingPlayerPosition]
+  }
+}
+
+for (const [position, assignedPlayerId] of Object.entries(currentDefense)) {
+  if (
+    assignedPlayerId === playerId &&
+    position !== "P"
+  ) {
+    delete currentDefense[position]
+  }
+}
       
         const pitcherChange = {
           id: crypto.randomUUID(),

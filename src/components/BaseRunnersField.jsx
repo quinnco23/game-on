@@ -25,9 +25,31 @@ function FieldBase({
   )
 }
 
+const runnerLabelSpots = {
+  first: {
+    left: "82%",
+    top: "42%",
+  },
+
+  second: {
+    left: "50%",
+    top: "7%",
+  },
+
+  third: {
+    left: "27%",
+    top: "44%",
+  },
+}
 
 
-function Base({ occupied, runner,  className = "", }) {
+
+function Base({
+  occupied,
+  runner,
+  base,
+  className = "",
+}) {
   return (
     <div className={`absolute h-10 w-24 ${className}`}>
     <div className= {`absolute left-1/2 top-2.5 h-3 w-3 -translate-x-1/2 rotate-45 rounded-md border-2 border-amber-200 bg-white shadow-[0_3px_8px_rgba(0,0,0,0.35)] ${
@@ -37,7 +59,22 @@ function Base({ occupied, runner,  className = "", }) {
   }`}/>
 
     {runner && (
-      <div className="absolute left-1/2 bottom-8 z-10 -translate-x-1/2 whitespace-nowrap text-center text-yellow-400 drop-shadow-md">
+        <div
+        className="
+          absolute
+          -translate-x-1/2
+          -translate-y-1/2
+          rounded-md
+          
+          px-2 py-1
+          text-[10px]
+          font-bold
+          text-yellow-300
+          shadow-md
+          whitespace-nowrap
+        "
+        style={runnerLabelSpots[base]}
+      >
         <div className="text-[8px] font-black">
           {/* #{runner.number} */}
         </div>
@@ -547,34 +584,34 @@ export function BaseRunnersField({
 
           {/* Interactive bases */}
           <Base
-             occupied={!!bases.second}
-             runner={bases.second}
-            label="2B"
-            className="
-              left-1/2 top-[50.5%]
-              -translate-x-1/2 -translate-y-1/2
-            "
-          />
+  base="second"
+  occupied={!!bases.second}
+  runner={bases.second}
+  className="
+    left-1/2 top-[50.5%]
+    -translate-x-1/2 -translate-y-1/2
+  "
+/>
 
-          <Base
-            occupied={!!bases.third}
-            runner={bases.third}
-            label="3B"
-            className="
-              left-[37.5%] top-[68%]
-              -translate-x-1/2 -translate-y-1/2
-            "
-          />
+<Base
+  base="third"
+  occupied={!!bases.third}
+  runner={bases.third}
+  className="
+    left-[37.5%] top-[68%]
+    -translate-x-1/2 -translate-y-1/2
+  "
+/>
 
-          <Base
-            occupied={!!bases.first}
-            runner={bases.first}
-            label="1B"
-            className="
-              left-[62.5%] top-[68%]
-              -translate-x-1/2 -translate-y-1/2
-            "
-          />
+<Base
+  base="first"
+  occupied={!!bases.first}
+  runner={bases.first}
+  className="
+    left-[62.5%] top-[68%]
+    -translate-x-1/2 -translate-y-1/2
+  "
+/>
              </div>
 
              <div  className=" border-scoreboard-cream/40
